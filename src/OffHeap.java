@@ -11,7 +11,7 @@ public class OffHeap {
     public Unsafe unsafe;
 
     public OffHeap(long size) throws NoSuchFieldException, IllegalAccessException {
-        initUnsafe();
+        this.unsafe = initUnsafe();
         this.size = size;
         this.address = this.unsafe.allocateMemory(size);
         unsafe.setMemory(this.address, this.size, (byte) 0);
