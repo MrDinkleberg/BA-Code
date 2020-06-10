@@ -4,7 +4,8 @@ import java.lang.reflect.Field;
 
 public class OffHeap {
 
-    private long address;
+    public long startaddress;
+    private long nextaddress;
     private long size;
 
 
@@ -13,8 +14,9 @@ public class OffHeap {
     public OffHeap(long size) throws NoSuchFieldException, IllegalAccessException {
         this.unsafe = initUnsafe();
         this.size = size;
-        this.address = this.unsafe.allocateMemory(size);
-        unsafe.setMemory(this.address, this.size, (byte) 0);
+        this.startaddress = this.unsafe.allocateMemory(size);
+        this.nextaddress = startaddress;
+        unsafe.setMemory(this.startaddress, this.size, (byte) 0);
     }
 
 
@@ -25,8 +27,16 @@ public class OffHeap {
         return (Unsafe) f.get(null);
     }
 
-    public void writeInt(int value){
+    public void freeMemory(long address){
+        unsafe.freeMemory(address);
+    }
 
+    public long writeInt(int value){
+        unsafe.putByte(nextaddress, (byte) value);
+        long address = nextaddress;
+        nextaddress += Integer.BYTES;
+
+        return address;
     }
 
 
