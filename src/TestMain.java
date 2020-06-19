@@ -9,11 +9,11 @@ public class TestMain {
 
         long address = memoryManager.writeInt(testIntMax);
 
-        System.out.println("store "+ testIntMax + " at " + address );
+        System.out.println("store "+ memoryManager.readInt(address) + " at " + address );
 
         address = memoryManager.writeInt(testIntMin);
 
-        System.out.println("store "+ testIntMin + " at " + address);
+        System.out.println("store "+ memoryManager.readInt(address) + " at " + address);
 
         memoryManager.cleanup();
 

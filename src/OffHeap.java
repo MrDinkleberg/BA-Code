@@ -32,11 +32,15 @@ public class OffHeap {
     }
 
     public long writeInt(int value){
-        unsafe.putByte(nextaddress, (byte) value);
+        unsafe.putInt(nextaddress, value);
         long address = nextaddress;
         nextaddress += Integer.BYTES;
 
         return address;
+    }
+
+    public int readInt(long address){
+        return unsafe.getInt(null, address);
     }
 
 

@@ -10,6 +10,10 @@ public class MemoryManager {
         return offHeap.writeInt(value);
     }
 
+    public int readInt(long address){
+        return offHeap.readInt(address);
+    }
+
 
     public void cleanup(){
         offHeap.freeMemory(offHeap.startaddress);
