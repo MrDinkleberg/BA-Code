@@ -1,77 +1,78 @@
 public class MemoryManager {
 
-    private OffHeap offHeap;
+    private OffHeapAccess offHeapAccess;
+    private long offheapaddress;
 
     public MemoryManager(long size) throws NoSuchFieldException, IllegalAccessException {
-        this.offHeap = new OffHeap(size);
+        this.offHeapAccess = new OffHeap(size);
     }
 
     public long writeInt(int value){
-        return offHeap.writeInt(value);
+        return offHeapAccess.writeInt(value);
     }
 
     public long writeLong(long value){
-        return offHeap.writeLong(value);
+        return offHeapAccess.writeLong(value);
     }
 
     public long writeDouble(double value){
-        return offHeap.writeDouble(value);
+        return offHeapAccess.writeDouble(value);
     }
 
     public long writeChar(char value){
-        return offHeap.writeChar(value);
+        return offHeapAccess.writeChar(value);
     }
 
     public long writeByte(byte value){
-        return offHeap.writeByte(value);
+        return offHeapAccess.writeByte(value);
     }
 
     public long writeShort(short value){
-        return offHeap.writeShort(value);
+        return offHeapAccess.writeShort(value);
     }
 
     public long writeFloat(float value){
-        return offHeap.writeFloat(value);
+        return offHeapAccess.writeFloat(value);
     }
 
     public long writeBoolean(boolean value){
-        return offHeap.writeBoolean(value);
+        return offHeapAccess.writeBoolean(value);
     }
 
     public int readInt(long address){
-        return offHeap.readInt(address);
+        return offHeapAccess.readInt(address);
     }
 
     public long readLong(long address){
-        return offHeap.readLong(address);
+        return offHeapAccess.readLong(address);
     }
 
     public double readDouble(long address){
-        return offHeap.readDouble(address);
+        return offHeapAccess.readDouble(address);
     }
 
     public char readChar(long address){
-        return offHeap.readChar(address);
+        return offHeapAccess.readChar(address);
     }
 
     public byte readByte(long address){
-        return offHeap.readByte(address);
+        return offHeapAccess.readByte(address);
     }
 
     public short readShort(long address){
-        return offHeap.readShort(address);
+        return offHeapAccess.readShort(address);
     }
 
     public float readFloat(long address){
-        return offHeap.readFloat(address);
+        return offHeapAccess.readFloat(address);
     }
 
     public boolean readBoolean(long address){
-        return offHeap.readBoolean(address);
+        return offHeapAccess.readBoolean(address);
     }
 
     public void cleanup(){
-        offHeap.freeMemory(offHeap.startaddress);
+        offHeapAccess.freeMemory(offheapaddress);
     }
 
 

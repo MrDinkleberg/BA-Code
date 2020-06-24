@@ -2,7 +2,7 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 
-public class OffHeap {
+public class OffHeap implements OffHeapAccess {
 
     public long startaddress;
     private long nextaddress;
@@ -27,10 +27,12 @@ public class OffHeap {
         return (Unsafe) f.get(null);
     }
 
+    @Override
     public void freeMemory(long address){
         unsafe.freeMemory(address);
     }
 
+    @Override
     public long writeInt(int value){
         unsafe.putInt(nextaddress, value);
         long address = nextaddress;
@@ -38,6 +40,7 @@ public class OffHeap {
         return address;
     }
 
+    @Override
     public long writeLong(long value){
         unsafe.putLong(nextaddress, value);
         long address = nextaddress;
@@ -45,6 +48,7 @@ public class OffHeap {
         return address;
     }
 
+    @Override
     public long writeDouble(double value){
         unsafe.putDouble(nextaddress, value);
         long address = nextaddress;
@@ -52,6 +56,7 @@ public class OffHeap {
         return address;
     }
 
+    @Override
     public long writeChar(char value){
         unsafe.putChar(nextaddress, value);
         long address = nextaddress;
@@ -59,6 +64,7 @@ public class OffHeap {
         return address;
     }
 
+    @Override
     public long writeByte(byte value){
         unsafe.putByte(nextaddress, value);
         long address = nextaddress;
@@ -66,6 +72,7 @@ public class OffHeap {
         return address;
     }
 
+    @Override
     public long writeShort(short value){
         unsafe.putShort(nextaddress, value);
         long address = nextaddress;
@@ -73,6 +80,7 @@ public class OffHeap {
         return address;
     }
 
+    @Override
     public long writeFloat(float value){
         unsafe.putFloat(nextaddress, value);
         long address = nextaddress;
@@ -80,6 +88,7 @@ public class OffHeap {
         return address;
     }
 
+    @Override
     public long writeBoolean(boolean value){
         unsafe.putBoolean(null, nextaddress, value);
         long address = nextaddress;
@@ -87,34 +96,42 @@ public class OffHeap {
         return address;
     }
 
+    @Override
     public int readInt(long address){
         return unsafe.getInt(address);
     }
 
+    @Override
     public long readLong(long address){
         return unsafe.getLong(address);
     }
 
+    @Override
     public double readDouble(long address){
         return unsafe.getDouble(address);
     }
 
+    @Override
     public char readChar(long address){
         return unsafe.getChar(address);
     }
 
+    @Override
     public byte readByte(long address){
         return unsafe.getByte(address);
     }
 
+    @Override
     public short readShort(long address){
         return unsafe.getShort(address);
     }
 
+    @Override
     public float readFloat(long address){
         return unsafe.getFloat(address);
     }
 
+    @Override
     public boolean readBoolean(long address){
         return unsafe.getBoolean(null, address);
     }
