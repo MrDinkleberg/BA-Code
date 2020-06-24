@@ -72,7 +72,7 @@ public class MemoryManager {
     }
 
     public void cleanup(){
-        offHeapAccess.freeMemory(offheapaddress);
+        ((OffHeap)offHeapAccess).freeMemory(offheapaddress);
     }
 
 

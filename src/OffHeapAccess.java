@@ -1,7 +1,5 @@
 public interface OffHeapAccess {
 
-    void freeMemory(long address);
-
     long writeInt(int value);
 
     long writeLong(long value);
