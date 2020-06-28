@@ -1,3 +1,7 @@
+// Interface zur Implementierung des Zugriffs auf den OffHeap.
+// Die Funktionen sollen dazu dienen dazu, Primitive Datentypen/Objekte in den OffHeap zu schreiben oder zu lesen.
+
+
 public interface OffHeapAccess {
 
     long writeInt(int value);

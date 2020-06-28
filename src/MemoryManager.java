@@ -7,6 +7,8 @@ public class MemoryManager {
         this.offHeapAccess = new OffHeap(size);
     }
 
+    //Aufruf der Zugriffsfunktionen des implementierten OffHeaps
+
     public long writeInt(int value){
         return offHeapAccess.writeInt(value);
     }

@@ -4,9 +4,9 @@ import java.lang.reflect.Field;
 
 public class OffHeap implements OffHeapAccess {
 
-    public long startaddress;
+    public long startaddress;   //Adresse des OffHeaps
     private long nextaddress;
-    private long size;
+    private long size;          //Groesse des OffHeaps
 
 
     public Unsafe unsafe;
@@ -21,7 +21,7 @@ public class OffHeap implements OffHeapAccess {
 
 
 
-    private Unsafe initUnsafe() throws NoSuchFieldException, IllegalAccessException {
+    private Unsafe initUnsafe() throws NoSuchFieldException, IllegalAccessException {  //Funktion zur Initialisierung der Unsafe Instanz
         Field f = Unsafe.class.getDeclaredField("theUnsafe");
         f.setAccessible(true);
         return (Unsafe) f.get(null);
@@ -29,10 +29,10 @@ public class OffHeap implements OffHeapAccess {
 
     public void freeMemory(long address){
         unsafe.freeMemory(address);
-    }
+    }   //Gibt den allozierten Speicher frei
 
     @Override
-    public long writeInt(int value){
+    public long writeInt(int value){        //Schreibt die übergebene Integer-Variable in den OffHeap
         unsafe.putInt(nextaddress, value);
         long address = nextaddress;
         nextaddress += Integer.BYTES;
@@ -40,7 +40,7 @@ public class OffHeap implements OffHeapAccess {
     }
 
     @Override
-    public long writeLong(long value){
+    public long writeLong(long value){      //Schreibt die übergebene Long-Variable in den OffHeap
         unsafe.putLong(nextaddress, value);
         long address = nextaddress;
         nextaddress += Long.BYTES;
@@ -48,7 +48,7 @@ public class OffHeap implements OffHeapAccess {
     }
 
     @Override
-    public long writeDouble(double value){
+    public long writeDouble(double value){      //Schreibt die übergebene Double-Variable in den OffHeap
         unsafe.putDouble(nextaddress, value);
         long address = nextaddress;
         nextaddress += Double.BYTES;
@@ -56,7 +56,7 @@ public class OffHeap implements OffHeapAccess {
     }
 
     @Override
-    public long writeChar(char value){
+    public long writeChar(char value){      //Schreibt die übergebene Char-Variable in den OffHeap
         unsafe.putChar(nextaddress, value);
         long address = nextaddress;
         nextaddress += Character.BYTES;
@@ -64,7 +64,7 @@ public class OffHeap implements OffHeapAccess {
     }
 
     @Override
-    public long writeByte(byte value){
+    public long writeByte(byte value){      //Schreibt die übergebene Byte-Variable in den OffHeap
         unsafe.putByte(nextaddress, value);
         long address = nextaddress;
         nextaddress += Byte.BYTES;
@@ -72,7 +72,7 @@ public class OffHeap implements OffHeapAccess {
     }
 
     @Override
-    public long writeShort(short value){
+    public long writeShort(short value){        //Schreibt die übergebene Short-Variable in den OffHeap
         unsafe.putShort(nextaddress, value);
         long address = nextaddress;
         nextaddress += Short.BYTES;
@@ -80,7 +80,7 @@ public class OffHeap implements OffHeapAccess {
     }
 
     @Override
-    public long writeFloat(float value){
+    public long writeFloat(float value){        //Schreibt die übergebene Float-Variable in den OffHeap
         unsafe.putFloat(nextaddress, value);
         long address = nextaddress;
         nextaddress += Float.BYTES;
@@ -88,7 +88,7 @@ public class OffHeap implements OffHeapAccess {
     }
 
     @Override
-    public long writeBoolean(boolean value){
+    public long writeBoolean(boolean value){        //Schreibt die übergebene Boolean-Variable in den OffHeap
         unsafe.putBoolean(null, nextaddress, value);
         long address = nextaddress;
         nextaddress += 1;
@@ -96,42 +96,42 @@ public class OffHeap implements OffHeapAccess {
     }
 
     @Override
-    public int readInt(long address){
+    public int readInt(long address){   //Gibt die an der übergebenen Adresse gespeicherte Integer-Variable zurueck
         return unsafe.getInt(address);
     }
 
     @Override
-    public long readLong(long address){
+    public long readLong(long address){ //Gibt die an der übergebenen Adresse gespeicherte Integer-Variable zurueck
         return unsafe.getLong(address);
     }
 
     @Override
-    public double readDouble(long address){
+    public double readDouble(long address){ //Gibt die an der übergebenen Adresse gespeicherte Double-Variable zurueck
         return unsafe.getDouble(address);
     }
 
     @Override
-    public char readChar(long address){
+    public char readChar(long address){ //Gibt die an der übergebenen Adresse gespeicherte Char-Variable zurueck
         return unsafe.getChar(address);
     }
 
     @Override
-    public byte readByte(long address){
+    public byte readByte(long address){ //Gibt die an der übergebenen Adresse gespeicherte Byte-Variable zurueck
         return unsafe.getByte(address);
     }
 
     @Override
-    public short readShort(long address){
+    public short readShort(long address){   //Gibt die an der übergebenen Adresse gespeicherte Short-Variable zurueck
         return unsafe.getShort(address);
     }
 
     @Override
-    public float readFloat(long address){
+    public float readFloat(long address){   //Gibt die an der übergebenen Adresse gespeicherte Float-Variable zurueck
         return unsafe.getFloat(address);
     }
 
     @Override
-    public boolean readBoolean(long address){
+    public boolean readBoolean(long address){   //Gibt die an der übergebenen Adresse gespeicherte Boolean-Variable zurueck
         return unsafe.getBoolean(null, address);
     }
 
