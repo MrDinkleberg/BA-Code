@@ -1,11 +1,31 @@
+import java.util.ArrayList;
+
 public class MemoryManager {
+
+    public static final long OFFHEAP_SIZE = 1000000000;
+
 
     private OffHeapAccess offHeapAccess;
     private long offheapaddress;
+    public ArrayList<SegmentHeader> segmentlist;
 
     public MemoryManager(long size) throws NoSuchFieldException, IllegalAccessException {
         this.offHeapAccess = new OffHeap(size);
+        segmentlist = new ArrayList<>();
     }
+
+    public void createSegments(int segments, int maxblocksize){
+        long segmentsize = OFFHEAP_SIZE/segments;
+
+        for(int i = 0; i < segments; i++){
+            segmentlist.add(new SegmentHeader(offheapaddress + i * segmentsize));
+        }
+    }
+
+
+
+
+
 
     //Aufruf der Zugriffsfunktionen des implementierten OffHeaps
 
