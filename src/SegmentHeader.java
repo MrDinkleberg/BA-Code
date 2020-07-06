@@ -1,6 +1,7 @@
 public class SegmentHeader {
 
     public long startaddress;
+    public long endaddress;
     public int maxblocksize;
     public int blocks;
     public long fragmentedblocks;
@@ -10,21 +11,20 @@ public class SegmentHeader {
 
     public SegmentHeader(long startaddress, int maxblocksize, long size) {
         this.startaddress = startaddress;
+        this.endaddress = startaddress + size;
         this.blocks = (int) (size / maxblocksize + 1);
         freeblocks = new long[32];
     }
 
     public void initSegment(int blocks){
-        firstBlock();
+        long address = startaddress;
+        freeblocks[31] = startaddress+1;
+        while(endaddress - address >= maxblocksize+1){
 
-        lastBlock();
-    }
 
-    private void firstBlock(){      //Spezielle Funktion, da der erste Marker nur ein halbes Byte gross ist
+            address += maxblocksize;
+        }
 
-    }
-
-    private void lastBlock(){       //Spezielle Funktion, da der letzte Marker nur ein halbes Byte gross ist
 
     }
 
