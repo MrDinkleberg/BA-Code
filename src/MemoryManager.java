@@ -5,6 +5,7 @@ public class MemoryManager {
     public static final long OFFHEAP_SIZE = 1000000000;
 
 
+
     private OffHeapAccess offHeapAccess;
     private long offheapaddress;
     public ArrayList<SegmentHeader> segmentlist;
@@ -18,7 +19,7 @@ public class MemoryManager {
         long segmentsize = OFFHEAP_SIZE/segments;
 
         for(int i = 0; i < segments; i++){
-            segmentlist.add(new SegmentHeader(offheapaddress + i * segmentsize));
+            segmentlist.add(new SegmentHeader(offheapaddress + segmentsize * i, maxblocksize, segmentsize));
         }
     }
 
