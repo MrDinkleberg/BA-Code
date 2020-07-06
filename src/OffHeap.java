@@ -5,7 +5,6 @@ import java.lang.reflect.Field;
 public class OffHeap implements OffHeapAccess {
 
     public long startaddress;   //Adresse des OffHeaps
-    private long nextaddress;
     private long size;          //Groesse des OffHeaps
 
 
@@ -15,7 +14,6 @@ public class OffHeap implements OffHeapAccess {
         this.unsafe = initUnsafe();
         this.size = size;
         this.startaddress = this.unsafe.allocateMemory(size);
-        this.nextaddress = startaddress;
         unsafe.setMemory(this.startaddress, this.size, (byte) 0);
     }
 
@@ -32,66 +30,50 @@ public class OffHeap implements OffHeapAccess {
     }   //Gibt den allozierten Speicher frei
 
     @Override
-    public long writeInt(int value){        //Schreibt die übergebene Integer-Variable in den OffHeap
-        unsafe.putInt(nextaddress, value);
-        long address = nextaddress;
-        nextaddress += Integer.BYTES;
+    public long writeInt(int value, long address){        //Schreibt die übergebene Integer-Variable in den OffHeap
+        unsafe.putInt(address, value);
         return address;
     }
 
     @Override
-    public long writeLong(long value){      //Schreibt die übergebene Long-Variable in den OffHeap
-        unsafe.putLong(nextaddress, value);
-        long address = nextaddress;
-        nextaddress += Long.BYTES;
+    public long writeLong(long value, long address){      //Schreibt die übergebene Long-Variable in den OffHeap
+        unsafe.putLong(address, value);
         return address;
     }
 
     @Override
-    public long writeDouble(double value){      //Schreibt die übergebene Double-Variable in den OffHeap
-        unsafe.putDouble(nextaddress, value);
-        long address = nextaddress;
-        nextaddress += Double.BYTES;
+    public long writeDouble(double value, long address){      //Schreibt die übergebene Double-Variable in den OffHeap
+        unsafe.putDouble(address, value);
         return address;
     }
 
     @Override
-    public long writeChar(char value){      //Schreibt die übergebene Char-Variable in den OffHeap
-        unsafe.putChar(nextaddress, value);
-        long address = nextaddress;
-        nextaddress += Character.BYTES;
+    public long writeChar(char value, long address){      //Schreibt die übergebene Char-Variable in den OffHeap
+        unsafe.putChar(address, value);
         return address;
     }
 
     @Override
-    public long writeByte(byte value){      //Schreibt die übergebene Byte-Variable in den OffHeap
-        unsafe.putByte(nextaddress, value);
-        long address = nextaddress;
-        nextaddress += Byte.BYTES;
+    public long writeByte(byte value, long address){      //Schreibt die übergebene Byte-Variable in den OffHeap
+        unsafe.putByte(address, value);
         return address;
     }
 
     @Override
-    public long writeShort(short value){        //Schreibt die übergebene Short-Variable in den OffHeap
-        unsafe.putShort(nextaddress, value);
-        long address = nextaddress;
-        nextaddress += Short.BYTES;
+    public long writeShort(short value, long address){        //Schreibt die übergebene Short-Variable in den OffHeap
+        unsafe.putShort(address, value);
         return address;
     }
 
     @Override
-    public long writeFloat(float value){        //Schreibt die übergebene Float-Variable in den OffHeap
-        unsafe.putFloat(nextaddress, value);
-        long address = nextaddress;
-        nextaddress += Float.BYTES;
+    public long writeFloat(float value, long address){        //Schreibt die übergebene Float-Variable in den OffHeap
+        unsafe.putFloat(address, value);
         return address;
     }
 
     @Override
-    public long writeBoolean(boolean value){        //Schreibt die übergebene Boolean-Variable in den OffHeap
-        unsafe.putBoolean(null, nextaddress, value);
-        long address = nextaddress;
-        nextaddress += 1;
+    public long writeBoolean(boolean value, long address){        //Schreibt die übergebene Boolean-Variable in den OffHeap
+        unsafe.putBoolean(null, address, value);
         return address;
     }
 

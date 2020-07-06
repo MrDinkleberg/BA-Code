@@ -23,6 +23,20 @@ public class MemoryManager {
         }
     }
 
+    private void createBlocks(SegmentHeader segment){
+        long address = segment.startaddress;
+        segment.freeblocks[31] = segment.startaddress+1;
+        while(segment.endaddress - address >= segment.maxblocksize+1){
+
+
+            address += segment.maxblocksize;
+        }
+    }
+
+    private SegmentHeader findSegment(){
+        return segmentlist.get(0);
+    }
+
 
 
 
@@ -31,35 +45,43 @@ public class MemoryManager {
     //Aufruf der Zugriffsfunktionen des implementierten OffHeaps
 
     public long writeInt(int value){
-        return offHeapAccess.writeInt(value);
+        SegmentHeader segment = findSegment();
+        return offHeapAccess.writeInt(value, segment.findFreeBlock());
     }
 
     public long writeLong(long value){
-        return offHeapAccess.writeLong(value);
+        SegmentHeader segment = findSegment();
+        return offHeapAccess.writeLong(value, segment.findFreeBlock());
     }
 
     public long writeDouble(double value){
-        return offHeapAccess.writeDouble(value);
+        SegmentHeader segment = findSegment();
+        return offHeapAccess.writeDouble(value, segment.findFreeBlock() );
     }
 
     public long writeChar(char value){
-        return offHeapAccess.writeChar(value);
+        SegmentHeader segment = findSegment();
+        return offHeapAccess.writeChar(value, segment.findFreeBlock());
     }
 
     public long writeByte(byte value){
-        return offHeapAccess.writeByte(value);
+        SegmentHeader segment = findSegment();
+        return offHeapAccess.writeByte(value, segment.findFreeBlock());
     }
 
     public long writeShort(short value){
-        return offHeapAccess.writeShort(value);
+        SegmentHeader segment = findSegment();
+        return offHeapAccess.writeShort(value, segment.findFreeBlock());
     }
 
     public long writeFloat(float value){
-        return offHeapAccess.writeFloat(value);
+        SegmentHeader segment = findSegment();
+        return offHeapAccess.writeFloat(value, segment.findFreeBlock());
     }
 
     public long writeBoolean(boolean value){
-        return offHeapAccess.writeBoolean(value);
+        SegmentHeader segment = findSegment();
+        return offHeapAccess.writeBoolean(value, segment.findFreeBlock());
     }
 
     public int readInt(long address){

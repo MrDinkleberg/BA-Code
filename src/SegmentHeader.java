@@ -16,17 +16,10 @@ public class SegmentHeader {
         freeblocks = new long[32];
     }
 
-    public void initSegment(int blocks){
-        long address = startaddress;
-        freeblocks[31] = startaddress+1;
-        while(endaddress - address >= maxblocksize+1){
-
-
-            address += maxblocksize;
-        }
-
-
+    public long findFreeBlock(){
+        return freeblocks[31];
     }
+
 
 
 
