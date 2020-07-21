@@ -24,13 +24,12 @@ public class SegmentHeader {
 
     public int findFittingBlock(int size){
 
-        if(size >= 18 && size <= 39 ) return 0;     //Die ersten Freispeicherlisten besitzen ein anderes Groessenintervall
-        if(size >= 40 && size <= 61 ) return 1;     //als die anderen
-        if(size >= 62 && size <= 83 ) return 2;
-        if(size >= 84 && size <= 105 ) return 3;
-        if(size >= 106 && size <= 127 ) return 4;
+        if(size >= 12 && size <= 23 ) return 0;     //Die ersten Freispeicherlisten besitzen ein anderes Groessenintervall
+        if(size >= 24 && size <= 35 ) return 1;     //als die anderen
+        if(size >= 36 && size <= 47 ) return 2;
+        if(size >= 48 && size <= 63 ) return 3;
 
-        for(int i = 5; i < MAXBLOCKSIZE_EXPONENT; i++ ){                //ab der fuenften Liste wird in der i-ten Liste
+        for(int i = 4; i < MAXBLOCKSIZE_EXPONENT; i++ ){                //ab der fuenften Liste wird in der i-ten Liste
             if(size >= Math.pow(2, i+2) && size < Math.pow(2, i+3)){    //Bloecke der Groesse 2^(i+1) bis 2^(i+2)-1
                 return i;                                               //gespeichert (Array-Indizes, deshalb erste Liste
             }                                                           //bei i=0)
