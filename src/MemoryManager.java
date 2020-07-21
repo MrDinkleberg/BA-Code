@@ -6,12 +6,14 @@ public class MemoryManager {
     public static final int NUMBER_OF_SEGMENTS = 10;
     public static final int NUMBER_OF_BLOCKS = 100;
     public static final int ADDRESS_SIZE = 5;
+    public static final long MAX_BLOCK_SIZE = 16000000L;
 
 
 
     private OffHeapAccess offHeapAccess;
     private long offheapaddress;
     private long offheapsize;
+    private long segmentsize;
     public ArrayList<SegmentHeader> segmentlist;
 
     public MemoryManager(long size) throws NoSuchFieldException, IllegalAccessException {
@@ -22,7 +24,7 @@ public class MemoryManager {
     }
 
     public void createSegments(int segments){
-        long segmentsize = offheapsize/segments;
+        segmentsize = offheapsize/segments;
         int maxblocksize = (int) segmentsize / NUMBER_OF_BLOCKS;
 
         for(int i = 0; i < segments; i++){
@@ -93,6 +95,16 @@ public class MemoryManager {
 
     private SegmentHeader findSegment(){
         return segmentlist.get(0);
+    }
+
+    private SegmentHeader getSegmentByAddress(long address){
+        for(int i = 0; i < NUMBER_OF_SEGMENTS; i++){
+            if(address >= offheapaddress + i * segmentsize && address < offheapaddress + (i+1) * segmentsize){
+                return segmentlist.get(i);
+            }
+        }
+
+        return null;
     }
 
 
