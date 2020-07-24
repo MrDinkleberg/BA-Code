@@ -30,49 +30,49 @@ public class OffHeap implements OffHeapAccess {
     }   //Gibt den allozierten Speicher frei
 
     @Override
-    public long writeInt(int value, long address){        //Schreibt die übergebene Integer-Variable in den OffHeap
+    public long writeInt(long address, int value){        //Schreibt die übergebene Integer-Variable in den OffHeap
         unsafe.putInt(address, value);
         return address;
     }
 
     @Override
-    public long writeLong(long value, long address){      //Schreibt die übergebene Long-Variable in den OffHeap
+    public long writeLong(long address, long value){      //Schreibt die übergebene Long-Variable in den OffHeap
         unsafe.putLong(address, value);
         return address;
     }
 
     @Override
-    public long writeDouble(double value, long address){      //Schreibt die übergebene Double-Variable in den OffHeap
+    public long writeDouble(long address, double value){      //Schreibt die übergebene Double-Variable in den OffHeap
         unsafe.putDouble(address, value);
         return address;
     }
 
     @Override
-    public long writeChar(char value, long address){      //Schreibt die übergebene Char-Variable in den OffHeap
+    public long writeChar(long address, char value){      //Schreibt die übergebene Char-Variable in den OffHeap
         unsafe.putChar(address, value);
         return address;
     }
 
     @Override
-    public long writeByte(byte value, long address){      //Schreibt die übergebene Byte-Variable in den OffHeap
+    public long writeByte(long address, byte value){      //Schreibt die übergebene Byte-Variable in den OffHeap
         unsafe.putByte(address, value);
         return address;
     }
 
     @Override
-    public long writeShort(short value, long address){        //Schreibt die übergebene Short-Variable in den OffHeap
+    public long writeShort(long address, short value){        //Schreibt die übergebene Short-Variable in den OffHeap
         unsafe.putShort(address, value);
         return address;
     }
 
     @Override
-    public long writeFloat(float value, long address){        //Schreibt die übergebene Float-Variable in den OffHeap
+    public long writeFloat(long address, float value){        //Schreibt die übergebene Float-Variable in den OffHeap
         unsafe.putFloat(address, value);
         return address;
     }
 
     @Override
-    public long writeBoolean(boolean value, long address){        //Schreibt die übergebene Boolean-Variable in den OffHeap
+    public long writeBoolean(long address, boolean value){        //Schreibt die übergebene Boolean-Variable in den OffHeap
         unsafe.putBoolean(null, address, value);
         return address;
     }

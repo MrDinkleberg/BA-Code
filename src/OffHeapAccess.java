@@ -4,21 +4,21 @@
 
 public interface OffHeapAccess {
 
-    long writeInt(int value, long address);
+    long writeInt(long address, int value);
 
-    long writeLong(long value, long address);
+    long writeLong(long address, long value);
 
-    long writeDouble(double value, long address);
+    long writeDouble(long address, double value);
 
-    long writeChar(char value, long address);
+    long writeChar(long address, char value);
 
-    long writeByte(byte value, long address);
+    long writeByte(long address, byte value);
 
-    long writeShort(short value, long address);
+    long writeShort(long address, short value);
 
-    long writeFloat(float value, long address);
+    long writeFloat(long address, float value);
 
-    long writeBoolean(boolean value, long address);
+    long writeBoolean(long address, boolean value);
 
     int readInt(long address);
 

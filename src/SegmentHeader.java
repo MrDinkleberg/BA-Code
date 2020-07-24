@@ -1,6 +1,6 @@
 public class SegmentHeader {
 
-    public static final int MAXBLOCKSIZE_EXPONENT = 31;
+    public static final int MAXBLOCKSIZE_EXPONENT = 24;
 
     public long startaddress;
     public long endaddress;
@@ -19,10 +19,10 @@ public class SegmentHeader {
     }
 
     public long getFreeBlock(int size){
-        return freeblocks[findFittingBlock(size)];
+        return freeblocks[findFittingBlockList(size)];
     }
 
-    public int findFittingBlock(int size){
+    public int findFittingBlockList(long size){
 
         if(size >= 12 && size <= 23 ) return 0;     //Die ersten Freispeicherlisten besitzen ein anderes Groessenintervall
         if(size >= 24 && size <= 35 ) return 1;     //als die anderen
@@ -37,6 +37,16 @@ public class SegmentHeader {
 
         return MAXBLOCKSIZE_EXPONENT;
     }
+
+    public void changeListAnchor(int index, long address){
+        freeblocks[index] = address;
+    }
+
+    public long getBlock(int index){
+        return freeblocks[index];
+    }
+
+
 
 
 }
