@@ -42,7 +42,7 @@ public class SegmentHeader {
         freeblocks[index] = address;
     }
 
-    public long getBlock(int index){
+    public long getListAnchor(int index){
         return freeblocks[index];
     }
 
