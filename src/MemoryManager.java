@@ -152,6 +152,30 @@ public class MemoryManager {
         }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+    //Bloecke
+
+    private long getNextBlock(long address){
+        long blocksize = readLengthField(address);
+        return address + blocksize + 1;
+    }
+
+    private long getPreviousBlock(long address){
+        int lengthfieldsize = readMarkerUpperBits(address - 1);
+        long blocksize = readLengthField(address - 1 -lengthfieldsize);
+        return address - blocksize - 1;
+    }
+
     private boolean isBlockInSegment(long address, SegmentHeader segment){
         long blocksize = readLengthField(address);
         return address >= segment.startaddress && address + blocksize <= segment.endaddress;
@@ -168,8 +192,7 @@ public class MemoryManager {
         return (nextmarker >=0 && nextmarker <= 3);
     }
 
-
-
+    //Segmente
 
     private SegmentHeader findSegment(){
         return segmentlist.get(0);
@@ -185,7 +208,7 @@ public class MemoryManager {
         return null;
     }
 
-
+    //Laengenfeld
 
     private void writeLengthField(long address, long size, int fieldsize){
 
@@ -227,6 +250,8 @@ public class MemoryManager {
         return blocksize;
     }
 
+    //Adresslogik
+
     private void writeAddressField(long address, long value){
 
         int counter = 0;
@@ -256,11 +281,6 @@ public class MemoryManager {
         return readAddressField(address + lengthfieldsize);
     }
 
-    private long getNextBlock(long address){
-        long blocksize = readLengthField(address);
-        return address + blocksize + 1;
-    }
-
     private void writeNextFreeBlock(long address, long value){
         int lengthfieldsize = readMarkerLowerBits(address-1);
         writeAddressField(address + lengthfieldsize, value);
@@ -271,16 +291,12 @@ public class MemoryManager {
         return readAddressField(address + lengthfieldsize + ADDRESS_SIZE);
     }
 
-    private long getPreviousBlock(long address){
-        int lengthfieldsize = readMarkerUpperBits(address - 1);
-        long blocksize = readLengthField(address - 1 -lengthfieldsize);
-        return address - blocksize - 1;
-    }
-
     private void writePreviousFreeBlock(long address, long value){
         int lengthfieldsize = readMarkerLowerBits(address-1);
         writeAddressField(address + lengthfieldsize + ADDRESS_SIZE, value);
     }
+
+    //Markerlogik
 
     private int readMarkerUpperBits(long address){
         byte marker = offHeapAccess.readByte(address);
@@ -325,8 +341,6 @@ public class MemoryManager {
         else if(size < 65536) return 10;
         else return 11;
     }
-
-
 
     //Aufruf der Zugriffsfunktionen des implementierten OffHeaps
 
