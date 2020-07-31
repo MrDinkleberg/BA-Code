@@ -1,21 +1,17 @@
+import java.io.IOException;
+
 public class TestMain {
 
-    public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException {
+    public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException, IOException {
 
-        MemoryManager memoryManager = new MemoryManager(1000000000);
+        MemoryManager memoryManager = new MemoryManager(100000000L, 10);
 
-        int testIntMax = Integer.MAX_VALUE;
-        int testIntMin = Integer.MIN_VALUE;
+        TestObject testobj = new TestObject(200, 300, "Hallo");
 
-        long address = memoryManager.writeInt(testIntMax);
+        long address = memoryManager.allocate(testobj);
+        System.out.println(address);
+        memoryManager.deallocate(address);
 
-        System.out.println("store "+ memoryManager.readInt(address) + " at " + address );
-
-        address = memoryManager.writeInt(testIntMin);
-
-        System.out.println("store "+ memoryManager.readInt(address) + " at " + address);
-
-        memoryManager.cleanup();
 
 
 
