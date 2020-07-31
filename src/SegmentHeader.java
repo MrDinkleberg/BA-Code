@@ -1,20 +1,21 @@
 public class SegmentHeader {
 
     public static final int MAXBLOCKSIZE_EXPONENT = 24;
+    public static final long MAX_BLOCK_SIZE = 16000000L;
 
     public long startaddress;
     public long endaddress;
     public int maxblocksize;
-    public int blocks;
+    public long blocks;
     public long fragmentedblocks;
     public double fragmentation;
     public long[] freeblocks;
 
 
-    public SegmentHeader(long startaddress, int maxblocksize, long size) {
+    public SegmentHeader(long startaddress, long size) {
         this.startaddress = startaddress;
         this.endaddress = startaddress + size;
-        this.blocks = (int) (size / maxblocksize + 1);
+        this.blocks = (int) (size / MAX_BLOCK_SIZE + 1);
         freeblocks = new long[MAXBLOCKSIZE_EXPONENT+1];
     }
 

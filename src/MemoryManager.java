@@ -4,8 +4,8 @@ import java.util.ArrayList;
 public class MemoryManager {
 
     //public static final long OFFHEAP_SIZE = 1000000000L;
-    public static final int NUMBER_OF_SEGMENTS = 10;
-    public static final int NUMBER_OF_BLOCKS = 100;
+    //public static final int NUMBER_OF_SEGMENTS = 10;
+    //public static final int NUMBER_OF_BLOCKS = 100;
     public static final int ADDRESS_SIZE = 5;
     public static final long MAX_BLOCK_SIZE = 16000000L;
 
@@ -15,40 +15,44 @@ public class MemoryManager {
     private long offheapaddress;
     private long offheapsize;
     private long segmentsize;
+    private int segments;
     public ArrayList<SegmentHeader> segmentlist;
 
-    public MemoryManager(long size) throws NoSuchFieldException, IllegalAccessException {
-        this.offHeapAccess = new OffHeap(size);
-        this.offheapsize = size;
+    public MemoryManager(long size, int segments) throws NoSuchFieldException, IllegalAccessException {
+        this.offheapsize = Math.max(size, segments * (MAX_BLOCK_SIZE + 1) +1);
+        this.offHeapAccess = new OffHeap(offheapsize);
+        offheapaddress = ((OffHeap) offHeapAccess).startaddress;
         segmentlist = new ArrayList<>();
-        createSegments(NUMBER_OF_SEGMENTS);
+        this.segments = segments;
+        createSegments(segments);
     }
 
     public void createSegments(int segments){
         segmentsize = offheapsize/segments;
-        int maxblocksize = (int) segmentsize / NUMBER_OF_BLOCKS;
 
         for(int i = 0; i < segments; i++){
-            segmentlist.add(new SegmentHeader(offheapaddress + segmentsize * i, maxblocksize, segmentsize));
-            initSegment(segmentlist.get(i));
+            SegmentHeader segment = new SegmentHeader(offheapaddress + (segmentsize * i), segmentsize);
+            segmentlist.add(segment);
+            initSegment(segment);
         }
     }
 
     private void initSegment(SegmentHeader segment){
         long address = segment.startaddress;
-        offHeapAccess.writeByte(address, (byte) 0);                 //Erstellt Byte damit Schleife funktioniert
+        System.out.println(address);
+        //offHeapAccess.writeByte(address, (byte) 0);                 //Erstellt Byte damit Schleife funktioniert
         long previousblock = 0;                                     //Pointer für Verkettung der freien Bloecke
-        long nextblock = address += (segment.maxblocksize + 1);
-        segment.freeblocks[segment.findFittingBlockList(segment.maxblocksize)] = segment.startaddress+1; //Verbesserungsbedarf
+        long nextblock = address + (MAX_BLOCK_SIZE + 2);
+        segment.freeblocks[segment.findFittingBlockList(MAX_BLOCK_SIZE)] = segment.startaddress+1; //Verbesserungsbedarf
 
-        while(segment.endaddress - address >= segment.maxblocksize+1){
-            writeMarkerLowerBits(address, getFreeBlockMarkerValue(segment.maxblocksize));
+        while(segment.endaddress - address >= MAX_BLOCK_SIZE+1){
+            writeMarkerLowerBits(address, getFreeBlockMarkerValue(MAX_BLOCK_SIZE));
             address++;
-            createFreeBlock(address, segment.maxblocksize, nextblock, previousblock);
+            createFreeBlock(address, MAX_BLOCK_SIZE, nextblock, previousblock);
             previousblock = address;
-            address += segment.maxblocksize;
-            nextblock = address += (segment.maxblocksize + 1);
-            createNewTrailerMarker(address, getFreeBlockMarkerValue(segment.maxblocksize));
+            address += MAX_BLOCK_SIZE;
+            nextblock = address + (MAX_BLOCK_SIZE + 1);
+            createNewTrailerMarker(address, getFreeBlockMarkerValue(MAX_BLOCK_SIZE));
         }
 
         long remainingsize = (segment.endaddress - 1) - address;
@@ -79,7 +83,9 @@ public class MemoryManager {
         SegmentHeader segment = findSegment();                      //verbesserungsbedarf
         int blocklist = segment.findFittingBlockList(size);         //Freispeicher-Liste in der passenden Groesse
         long address = segment.getListAnchor(blocklist);
+        System.out.println(address);
         long nextfreeblock = getNextFreeBlock(address);
+        System.out.println(nextfreeblock);
         writePreviousFreeBlock(nextfreeblock, 0);
         segment.changeListAnchor(blocklist, nextfreeblock);         //setzt den naechsten freien Block als Listenanker
 
@@ -199,7 +205,7 @@ public class MemoryManager {
     }
 
     private SegmentHeader getSegmentByAddress(long address){
-        for(int i = 0; i < NUMBER_OF_SEGMENTS; i++){
+        for(int i = 0; i < segments; i++){
             if(address >= offheapaddress + i * segmentsize && address < offheapaddress + (i+1) * segmentsize){
                 return segmentlist.get(i);
             }
@@ -244,7 +250,7 @@ public class MemoryManager {
         int lengthfieldsize = readMarkerLowerBits(address-1);
         long blocksize = 0;
         for(int i = 0; i < lengthfieldsize; i++){
-            blocksize = blocksize | offHeapAccess.readByte(address);
+            blocksize = blocksize | (long) offHeapAccess.readByte(address);
             blocksize = blocksize << 8;
         }
         return blocksize;
@@ -267,8 +273,7 @@ public class MemoryManager {
         long value = 0;
 
         for(int i = 0; i < ADDRESS_SIZE; i++){
-            byte read = offHeapAccess.readByte(address + i);
-            value = value | read;
+            value = value | offHeapAccess.readByte(address + i);
             value = value << 8;
         }
 
@@ -344,7 +349,7 @@ public class MemoryManager {
 
     //Aufruf der Zugriffsfunktionen des implementierten OffHeaps
 
-    public long writeInt(int value){
+    /*public long writeInt(int value){
         SegmentHeader segment = findSegment();
         return offHeapAccess.writeInt(segment.getFreeBlock(Integer.SIZE), value);
     }
@@ -382,7 +387,7 @@ public class MemoryManager {
     public long writeBoolean(boolean value){
         SegmentHeader segment = findSegment();
         return offHeapAccess.writeBoolean(segment.getFreeBlock(1), value);
-    }
+    }*/
 
     public void writeByteArray(long address, byte[] value){
         for(int i = 0; i < value.length; i++){
