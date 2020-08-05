@@ -2,13 +2,15 @@ import java.io.IOException;
 
 public class TestMain {
 
-    public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException, IOException {
+    public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException, IOException, ClassNotFoundException {
 
         MemoryManager memoryManager = new MemoryManager(100000000L, 10);
 
         TestObject testobj = new TestObject(200, 300, "Hallo");
 
         long address = memoryManager.allocate(testobj);
+        //System.out.println(testobj);
+        //System.out.println(memoryManager.readObject(address));
         //System.out.println(address);
         TestObject testobj2 = new TestObject(200, 300, "Hallo");
         TestObject testobj3 = new TestObject(Long.MAX_VALUE, Integer.MAX_VALUE, "Hallo");

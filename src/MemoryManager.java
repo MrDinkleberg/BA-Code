@@ -9,7 +9,7 @@ public class MemoryManager {
     //public static final int NUMBER_OF_SEGMENTS = 10;
     //public static final int NUMBER_OF_BLOCKS = 100;
     public static final int ADDRESS_SIZE = 5;
-    public static final long MAX_BLOCK_SIZE = 16000000L;
+    public static final int MAX_BLOCK_SIZE = 16000000;
 
 
 
@@ -56,7 +56,7 @@ public class MemoryManager {
             writeMarkerUpperBits(address, getFreeBlockMarkerValue(MAX_BLOCK_SIZE));
         }
 
-        long remainingsize = (segment.endaddress - 1) - address;
+        int remainingsize = (int) ((segment.endaddress - 1) - address);
         if(remainingsize > 0) {
             writeMarkerLowerBits(address, getFreeBlockMarkerValue(remainingsize));
             address++;
@@ -68,7 +68,7 @@ public class MemoryManager {
         }
     }
 
-    private void createFreeBlock(long address, long size, long next, long prev){
+    private void createFreeBlock(long address, int size, long next, long prev){
         int lengthfieldsize = getFreeBlockMarkerValue(size);
         writeLengthField(address, size, lengthfieldsize);
         writeNextFreeBlock(address, next);
@@ -81,7 +81,7 @@ public class MemoryManager {
         byte[] objectbytearray = serialize(object);                 //serialisiert das Objekt in ein Byte Array
         byte usedmarkervalue = getUsedBlockMarkerValue(objectbytearray.length);       //Markerwert des allozierten Speichers
         int lengthfieldsize = usedmarkervalue - 8;  //berechnet Laengenfeld fuer belegten Block
-        long size = objectbytearray.length + 2 * lengthfieldsize;
+        int size = objectbytearray.length + 2 * lengthfieldsize;
 
         SegmentHeader segment = findSegment();                      //verbesserungsbedarf
         int blocklist = segment.findFittingBlockList(size);         //Freispeicher-Liste in der passenden Groesse
@@ -93,9 +93,9 @@ public class MemoryManager {
         writePreviousFreeBlock(nextfreeblock, 0);
         segment.changeListAnchor(blocklist, nextfreeblock);         //setzt den naechsten freien Block als Listenanker
 
-        long blocksize = readLengthField(address);                     //Groesse des angeforderten Blocks
+        int blocksize = readLengthField(address);                     //Groesse des angeforderten Blocks
         //System.out.println(blocksize);
-        long newblocksize = blocksize - size;                       //Groesse des neuen freien Blocks
+        int newblocksize = blocksize - size;                       //Groesse des neuen freien Blocks
         long newblockaddress = address + size + 1;                  //Adresse des neuen freien Blocks
 
         writeMarkerLowerBits(address-1, usedmarkervalue);
@@ -113,7 +113,7 @@ public class MemoryManager {
         SegmentHeader segment = getSegmentByAddress(address);
         if(segment != null) {
             int lengthfieldsize = readMarkerLowerBits(address - 1) - 8;
-            long freeblocksize = readLengthField(address) + 2 * lengthfieldsize;
+            int freeblocksize = readLengthField(address) + 2 * lengthfieldsize;
             long freeblockstart = address;
 
 
@@ -145,7 +145,7 @@ public class MemoryManager {
 
     }
 
-    private void cutFreeBlock(SegmentHeader segment, long newblockaddress, long newblocksize){
+    private void cutFreeBlock(SegmentHeader segment, long newblockaddress, int newblocksize){
 
         int blocklist = segment.findFittingBlockList(newblocksize);
         long listanchor = segment.getListAnchor(blocklist);
@@ -168,13 +168,20 @@ public class MemoryManager {
         }
     }
 
+    private Serializable deserialize(byte[] value) throws IOException, ClassNotFoundException {
+        try(ByteArrayInputStream bis = new ByteArrayInputStream(value);
+        ObjectInput in = new ObjectInputStream(bis)) {
+            return (Serializable) in.readObject();
+        }
+    }
+
 
 
     //Bloecke
 
     private long getNextBlock(long address){
         int lengthfieldsize = readMarkerLowerBits(address - 1);
-        long blocksize = readLengthField(address);
+        int blocksize = readLengthField(address);
         if(isBlockUsed(address)){
                 return address + blocksize + 2 * (lengthfieldsize - 8) + 1;
         }
@@ -188,7 +195,7 @@ public class MemoryManager {
         if(isBlockUsed(address)){
             lengthfieldsize -= 8;
         }
-        long blocksize = readLengthField(address - 1 -lengthfieldsize);
+        int blocksize = readLengthField(address - 1 -lengthfieldsize);
         if(isBlockUsed(address)) return address - blocksize - 1;
         else return address - blocksize - 2 * lengthfieldsize -1;
     }
@@ -206,7 +213,7 @@ public class MemoryManager {
     private boolean isNextBlockFree(long address){
         int marker = readMarkerLowerBits(address - 1);
         System.out.println(marker);
-        long blocksize = readLengthField(address);
+        int blocksize = readLengthField(address);
         if(isBlockUsed(address)){
             blocksize += 2 * (marker - 8);
         }
@@ -246,16 +253,16 @@ public class MemoryManager {
         writeByteArray(address, convert);
     }
 
-    private long readLengthField(long address){
+    private int readLengthField(long address){
         int lengthfieldsize = readMarkerLowerBits(address-1);
         if(isBlockUsed(address)) lengthfieldsize -= 8;
 
-        byte[] convert = new byte[Long.BYTES];
+        byte[] convert = new byte[Integer.BYTES];
         System.out.println(lengthfieldsize);
         for(int i = 0; i < lengthfieldsize; i++){
             convert[i] = offHeapAccess.readByte(address + i + addressoffset);
         }
-        return ByteBuffer.wrap(convert).getLong();
+        return ByteBuffer.wrap(convert).getInt();
 
     }
 
@@ -365,6 +372,29 @@ public class MemoryManager {
         for(int i = 0; i < ADDRESS_SIZE; i++){
             offHeapAccess.writeByte(address + i + addressoffset, value[i]);
         }
+    }
+
+    public Serializable readObject(long address) throws IOException, ClassNotFoundException {
+        int lengthfieldsize = readMarkerLowerBits(address - 1);
+        if(lengthfieldsize >= 1 && lengthfieldsize <= 3) {
+            System.out.println("No object at this address");
+            return null;
+        } else {
+            lengthfieldsize -= 8;
+        }
+        int objectsize = readLengthField(address);
+        byte[] object = readByteArray(address, lengthfieldsize, objectsize);
+        return deserialize(object);
+
+
+    }
+
+    public byte[] readByteArray(long address, int lengthfieldsize, int size){
+        byte[] value = new byte[size];
+        for(int i = 0; i < size; i++){
+            value[i] = offHeapAccess.readByte(address + lengthfieldsize + i + addressoffset);
+        }
+        return value;
     }
 
     public int readInt(long address){
