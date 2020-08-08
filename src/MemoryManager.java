@@ -1,6 +1,5 @@
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 
 public class MemoryManager {
@@ -20,7 +19,7 @@ public class MemoryManager {
     private int segments;
     public ArrayList<SegmentHeader> segmentlist;
 
-    public MemoryManager(long size, int segments) throws NoSuchFieldException, IllegalAccessException {
+    public MemoryManager(long size, int segments) throws NoSuchFieldException, IllegalAccessException, InterruptedException {
         this.offheapsize = Math.max(size, segments * (MAX_BLOCK_SIZE + 2));
         this.offHeapAccess = new OffHeap(offheapsize);
         addressoffset = ((OffHeap) offHeapAccess).startaddress;
@@ -29,50 +28,77 @@ public class MemoryManager {
         createSegments(segments);
     }
 
-    public void createSegments(int segments){
-        segmentsize = offheapsize/segments;
+    public void createSegments(int segments) throws InterruptedException {
+        segmentsize = (int) offheapsize/segments;
+        Thread[] threads = new Thread[segments];
+        long segmentstart = 0;
 
         for(int i = 0; i < segments; i++){
-            SegmentHeader segment = new SegmentHeader(segmentsize * i, segmentsize);
+            SegmentHeader segment = new SegmentHeader(segmentstart, segmentsize);
+            segmentstart += segmentsize + 1;
             segmentlist.add(segment);
-            initSegment(segment);
+            threads[i] = new Thread(() -> initSegment(segment));
+            threads[i].start();
+        }
+        for(int i = 0; i < segments; i++){
+            threads[i].join();
         }
     }
 
     private void initSegment(SegmentHeader segment){
-        long address = segment.startaddress;
-        //offHeapAccess.writeByte(address, (byte) 0);                 //Erstellt Byte damit Schleife funktioniert
-        long previousblock = 0;                                     //Pointer für Verkettung der freien Bloecke
-        long nextblock = address + (MAX_BLOCK_SIZE + 2);
-        segment.freeblocks[segment.findFittingBlockList(MAX_BLOCK_SIZE)] = segment.startaddress+1; //Verbesserungsbedarf
+        long stamp = segment.lock.writeLock();
+        try {
+            long address = segment.startaddress;
+            long previousblock = 0;                                     //Pointer für Verkettung der freien Bloecke
+            long nextblock = address + (MAX_BLOCK_SIZE + 2);
+            segment.changeListAnchor(segment.findExactBlockList(MAX_BLOCK_SIZE), address + 1);  //setzt Anker fuer Freie-Bloecke-Liste
+            byte markervalue = getFreeBlockMarkerValue(MAX_BLOCK_SIZE);
 
-        while(segment.endaddress - address >= MAX_BLOCK_SIZE+1){
-            writeMarkerLowerBits(address, getFreeBlockMarkerValue(MAX_BLOCK_SIZE));
-            address++;
-            createFreeBlock(address, MAX_BLOCK_SIZE, nextblock, previousblock);
-            previousblock = address;
-            nextblock = address + (MAX_BLOCK_SIZE + 1);
-            address += MAX_BLOCK_SIZE;
-            writeMarkerUpperBits(address, getFreeBlockMarkerValue(MAX_BLOCK_SIZE));
-        }
+            while (segment.endaddress - address >= MAX_BLOCK_SIZE + 1) {    //erstellt freie Bloecke maximaler Groesse und verkettet sie in die Liste
+                writeMarkerLowerBits(address, markervalue);
+                address++;
+                createFreeBlock(address, MAX_BLOCK_SIZE, nextblock, previousblock);
+                previousblock = address;
+                nextblock = address + (MAX_BLOCK_SIZE + 1);
+                address += MAX_BLOCK_SIZE;
+                writeMarkerUpperBits(address, markervalue);
+            }
 
-        int remainingsize = (int) ((segment.endaddress - 1) - address);
-        if(remainingsize > 0) {
-            writeMarkerLowerBits(address, getFreeBlockMarkerValue(remainingsize));
-            address++;
-            int blocklist = segment.findFittingBlockList(remainingsize);
-            segment.freeblocks[blocklist] = address;
-            createFreeBlock(address, remainingsize, 0, 0);
-            address += remainingsize;
-            createNewTrailerMarker(address, getFreeBlockMarkerValue(remainingsize));
+            int remainingsize = (int) ((segment.endaddress - 1) - address);     //erstellt einen Block der restlichen Groesse
+            if (remainingsize > 0 && address + remainingsize < segment.endaddress) {
+                byte marker = getFreeBlockMarkerValue(remainingsize);
+                if(marker == 15){
+                    writeMarkerLowerBits(address, marker);
+                    writeMarkerUpperBits(address + 1, marker);
+                }
+                else if(marker == 0){
+                    writeMarkerLowerBits(address, marker);
+                    address++;
+                    writeLengthField(address, remainingsize, 1);
+                    address += remainingsize +1;
+                    writeMarkerUpperBits(address, marker);
+                }
+                else {
+                    writeMarkerLowerBits(address, marker);
+                    address++;
+                    int blocklist = segment.findExactBlockList(remainingsize);
+                    segment.freeblocks[blocklist] = address;
+                    createFreeBlock(address, remainingsize, 0, 0);
+                    address += remainingsize;
+                    writeMarkerUpperBits(address, marker);
+                }
+            }
+            System.out.println("done");
+        } finally {
+            segment.lock.unlockWrite(stamp);
         }
     }
 
     private void createFreeBlock(long address, int size, long next, long prev){
         int lengthfieldsize = getFreeBlockMarkerValue(size);
         writeLengthField(address, size, lengthfieldsize);
-        writeNextFreeBlock(address, next);
-        writePreviousFreeBlock(address, prev);
+        writeAddressField(address + lengthfieldsize, next);
+        writeAddressField(address + lengthfieldsize + ADDRESS_SIZE, prev);
         writeLengthField(address + size - lengthfieldsize, size, lengthfieldsize);
 
     }
@@ -82,56 +108,115 @@ public class MemoryManager {
         byte usedmarkervalue = getUsedBlockMarkerValue(objectbytearray.length);       //Markerwert des allozierten Speichers
         int lengthfieldsize = usedmarkervalue - 8;  //berechnet Laengenfeld fuer belegten Block
         int size = objectbytearray.length + 2 * lengthfieldsize;
+        long address;
 
         SegmentHeader segment = findSegment();                      //verbesserungsbedarf
-        int blocklist = segment.findFittingBlockList(size);         //Freispeicher-Liste in der passenden Groesse
-        //System.out.println(blocklist);
-        long address = segment.getListAnchor(blocklist);
-        //System.out.println(address);
-        long nextfreeblock = getNextFreeBlock(address);
-        //System.out.println(nextfreeblock);
-        writePreviousFreeBlock(nextfreeblock, 0);
-        segment.changeListAnchor(blocklist, nextfreeblock);         //setzt den naechsten freien Block als Listenanker
+        long stamp = segment.lock.writeLock();
+        try {
+            int blocklist = segment.findFittingBlockList(size);         //Freispeicher-Liste in der passenden Groesse
+            address = segment.getListAnchor(blocklist);
+            long nextfreeblock = getNextFreeBlock(address);
+            int freelengthfieldsize = readMarkerLowerBits(nextfreeblock - 1);
+            writeAddressField(nextfreeblock + freelengthfieldsize + ADDRESS_SIZE, 0);
+            segment.changeListAnchor(blocklist, nextfreeblock);         //setzt den naechsten freien Block als Listenanker
 
-        int blocksize = readLengthField(address);                     //Groesse des angeforderten Blocks
-        //System.out.println(blocksize);
-        int newblocksize = blocksize - size;                       //Groesse des neuen freien Blocks
-        long newblockaddress = address + size + 1;                  //Adresse des neuen freien Blocks
+            int blocksize = readLengthField(address, readMarkerLowerBits(address - 1));    //Groesse des angeforderten Blocks
+            int newblocksize = blocksize - size;                       //Groesse des neuen freien Blocks
 
-        writeMarkerLowerBits(address-1, usedmarkervalue);
-        writeLengthField(address, objectbytearray.length, lengthfieldsize);
-        writeByteArray(address + lengthfieldsize, objectbytearray);
-        writeLengthField(address + lengthfieldsize + objectbytearray.length, objectbytearray.length, lengthfieldsize);
-        createNewTrailerMarker(address + size, usedmarkervalue);
-        //System.out.println(newblockaddress + " " + newblocksize);
-        cutFreeBlock(segment, newblockaddress, newblocksize);
+            long newblockaddress = address + size + 1;                  //Adresse des neuen freien Blocks
 
+            writeMarkerLowerBits(address - 1, usedmarkervalue);
+            writeLengthField(address, objectbytearray.length, lengthfieldsize);
+            writeByteArray(address + lengthfieldsize, objectbytearray, objectbytearray.length);
+            writeLengthField(address + lengthfieldsize + objectbytearray.length, objectbytearray.length, lengthfieldsize);
+            createNewTrailerMarker(address + size, usedmarkervalue);
+            if(newblocksize > 0) {
+                cutFreeBlock(segment, newblockaddress, newblocksize); //erstellt aus ueberschuessigem Speicher neuen freien Block
+            }
+        } finally {
+            segment.lock.unlockWrite(stamp);
+        }
         return address;
+
+
     }
 
     public void deallocate(long address){
         SegmentHeader segment = getSegmentByAddress(address);
+
         if(segment != null) {
             int lengthfieldsize = readMarkerLowerBits(address - 1) - 8;
-            int freeblocksize = readLengthField(address) + 2 * lengthfieldsize;
+            int freeblocksize = readLengthField(address, lengthfieldsize) + 2 * lengthfieldsize;
             long freeblockstart = address;
+            long previousblock;
 
-
-            while (isBlockInSegment(address - 2, segment) && freeblocksize < MAX_BLOCK_SIZE && isPreviousBlockFree(freeblockstart)) {
-                long previousblock = getPreviousBlock(freeblockstart);
-                freeblockstart = previousblock;
-                freeblocksize += readLengthField(freeblockstart);
+            while (isBlockInSegment(freeblockstart - 2, segment) && isPreviousBlockFree(freeblockstart) && freeblocksize < MAX_BLOCK_SIZE) {
+                previousblock = getPreviousBlock(freeblockstart);
+                int prevmarker = readMarkerLowerBits(previousblock - 1);
+                System.out.println(freeblocksize);
+                if(prevmarker == 0){
+                    int prevsize = readLengthField(previousblock, 1);
+                    if(freeblocksize + prevsize + 1 <= MAX_BLOCK_SIZE){
+                        freeblocksize += prevsize;
+                        freeblockstart = previousblock;
+                    } else {
+                        break;
+                    }
+                }
+                else if(prevmarker == 15){
+                    int prevsize = 1;
+                    if(freeblocksize + prevsize + 1 <= MAX_BLOCK_SIZE){
+                        freeblocksize += prevsize;
+                        freeblockstart = previousblock;
+                    } else {
+                        break;
+                    }
+                } else {
+                    int prevsize = readLengthField(previousblock, prevmarker);
+                    if (freeblocksize + prevsize + 1 <= MAX_BLOCK_SIZE) {
+                        freeblocksize += prevsize;
+                        freeblockstart = previousblock;
+                    } else {
+                        break;
+                    }
+                }
             }
 
             long nextblock = getNextBlock(address);
 
 
-            while (isBlockInSegment(nextblock, segment) && freeblocksize < MAX_BLOCK_SIZE && isNextBlockFree(address)) {
-                freeblocksize += readLengthField(nextblock);
-                nextblock = getNextBlock(nextblock);
+            while (isBlockInSegment(nextblock, segment) && isNextBlockFree(address) && freeblocksize < MAX_BLOCK_SIZE) {
+                int nextmarker = readMarkerLowerBits(nextblock - 1);
+                if(nextmarker == 0){
+                    int nextblocksize = readLengthField(nextblock, 1);
+                    if(freeblocksize + nextblocksize + 1 <= MAX_BLOCK_SIZE){
+                        freeblocksize += nextblocksize + 1;
+                        nextblock = getNextBlock(nextblock);
+                    } else {
+                        break;
+                    }
+                } else if(nextmarker == 15){
+                    int nextblocksize = 1;
+                    if(freeblocksize + nextblocksize + 1 <= MAX_BLOCK_SIZE){
+                        freeblocksize += nextblocksize + 1;
+                        nextblock = getNextBlock(nextblock);
+                    } else {
+                        break;
+                    }
+                } else {
+                    int nextblocksize = readLengthField(nextblock, nextmarker);
+                    if (freeblocksize + nextblocksize <= MAX_BLOCK_SIZE) {
+                        freeblocksize += nextblocksize + 1;
+                        nextblock = getNextBlock(nextblock);
+                    } else {
+                        break;
+                    }
+                }
+
+
             }
 
-            int freeblocklist = segment.findFittingBlockList(freeblocksize);
+            int freeblocklist = segment.findExactBlockList(freeblocksize);
             long listanchor = segment.getListAnchor(freeblocklist);
             byte markervalue = getFreeBlockMarkerValue(freeblocksize);
             writeMarkerLowerBits(freeblockstart-1, markervalue);
@@ -145,18 +230,46 @@ public class MemoryManager {
 
     }
 
+    public void writeObject(long address, Serializable object) throws IOException {
+        int lengthfieldsize = readMarkerLowerBits(address -1) - 8;
+        int blocksize = readLengthField(address, lengthfieldsize);
+        byte[] objectarray = serialize(object);
+        if(objectarray.length != blocksize){
+            System.out.println("Object is of different size");
+        }
+        else {
+            writeAddressByteArray(address + lengthfieldsize, objectarray);
+        }
+    }
+
     private void cutFreeBlock(SegmentHeader segment, long newblockaddress, int newblocksize){
 
-        int blocklist = segment.findFittingBlockList(newblocksize);
-        long listanchor = segment.getListAnchor(blocklist);
-        writePreviousFreeBlock(listanchor, newblockaddress);
-        segment.changeListAnchor(blocklist, newblockaddress);
-
         byte markervalue = getFreeBlockMarkerValue(newblocksize);
-        writeMarkerLowerBits(newblockaddress-1, markervalue);
-        createFreeBlock(newblockaddress, newblocksize, listanchor, 0);
-        writeMarkerUpperBits(newblockaddress + newblocksize + 1, markervalue);
 
+        if(markervalue == 15){
+            writeMarkerLowerBits(newblockaddress - 1, markervalue);
+            writeMarkerUpperBits(newblockaddress, markervalue);
+        }
+        else if(markervalue == 0){
+            writeMarkerLowerBits(newblockaddress - 1, markervalue);
+            writeLengthField(newblockaddress, newblocksize, 1);
+            writeLengthField(newblockaddress + newblocksize - 1, newblocksize, 1);
+            writeMarkerUpperBits(newblockaddress + newblocksize, markervalue);
+        }
+        else {
+            int blocklist = segment.findExactBlockList(newblocksize);
+            long listanchor = segment.getListAnchor(blocklist);
+            if (listanchor != 0) {
+                int lengthfieldsize = readMarkerLowerBits(listanchor - 1);
+                writeAddressField(listanchor + lengthfieldsize + ADDRESS_SIZE, newblockaddress);
+            }
+            segment.changeListAnchor(blocklist, newblockaddress);
+
+
+            writeMarkerLowerBits(newblockaddress - 1, markervalue);
+            createFreeBlock(newblockaddress, newblocksize, listanchor, 0);
+            writeMarkerUpperBits(newblockaddress + newblocksize, markervalue);
+        }
 
     }
 
@@ -180,42 +293,67 @@ public class MemoryManager {
     //Bloecke
 
     private long getNextBlock(long address){
-        int lengthfieldsize = readMarkerLowerBits(address - 1);
-        int blocksize = readLengthField(address);
-        if(isBlockUsed(address)){
-                return address + blocksize + 2 * (lengthfieldsize - 8) + 1;
+        int marker = readMarkerLowerBits(address - 1);
+        int blocksize;
+        if(marker == 0){
+            blocksize = readLengthField(address, 1);
+            return address + blocksize + 1;
+        } else if(marker == 15){
+            return address + 1;
+        } else {
+            if (isBlockUsed(address)) marker -= 8;
+            blocksize = readLengthField(address, marker);
+            if (isBlockUsed(address)) {
+                return address + blocksize + 2 * (marker - 8) + 1;
+            }
+            return address + blocksize + 1;
         }
-        return address + blocksize + 1;
     }
 
-    private long getPreviousBlock(long address){
-        System.out.println(address);
-        int lengthfieldsize = readMarkerUpperBits(address - 1);
-        System.out.println(lengthfieldsize);
-        if(isBlockUsed(address)){
-            lengthfieldsize -= 8;
+    public long getPreviousBlock(long address){
+        int marker = readMarkerUpperBits(address - 1);
+        int blocksize;
+        if(marker == 0) {
+            blocksize = readLengthField(address - 2, 1);
+            return address - blocksize - 1;
+        } else if(marker == 15){
+            return address - 1;
         }
-        int blocksize = readLengthField(address - 1 -lengthfieldsize);
-        if(isBlockUsed(address)) return address - blocksize - 1;
-        else return address - blocksize - 2 * lengthfieldsize -1;
+        else {
+            if (marker >= 9 && marker <= 11) {
+                marker -= 8;
+            }
+            blocksize = readLengthField((address - 1 - marker), marker);
+            if (isPreviousBlockUsed(address)) return address - blocksize - 2 * marker - 1;
+            else return address - blocksize - 1;
+        }
     }
 
-    private boolean isBlockInSegment(long address, SegmentHeader segment){
+
+    public boolean isBlockInSegment(long address, SegmentHeader segment){
         //long blocksize = readLengthField(address);
-        return address >= segment.startaddress && address <= segment.endaddress;
+        return ((address >= segment.startaddress) && (address <= segment.endaddress));
     }
 
     private boolean isPreviousBlockFree(long address){
         int prevmarker = readMarkerUpperBits(address-1);
-        return (prevmarker >=0 && prevmarker <= 3);
+        return ((prevmarker >=1 && prevmarker <= 3) || prevmarker == 0 || prevmarker == 15);
     }
 
+    private boolean isPreviousBlockUsed(long address){
+        int prevmarker = readMarkerUpperBits(address-1);
+        return ((prevmarker >=9 && prevmarker <= 11));
+    }
+
+
     private boolean isNextBlockFree(long address){
-        int marker = readMarkerLowerBits(address - 1);
-        System.out.println(marker);
-        int blocksize = readLengthField(address);
+        int lengthfieldsize = readMarkerLowerBits(address - 1);
         if(isBlockUsed(address)){
-            blocksize += 2 * (marker - 8);
+            lengthfieldsize -= 8;
+        }
+        int blocksize = readLengthField(address, lengthfieldsize);
+        if(isBlockUsed(address)){
+            blocksize += 2 * lengthfieldsize;
         }
         int nextmarker = readMarkerLowerBits(address + blocksize);
         return (nextmarker >=0 && nextmarker <= 3);
@@ -234,7 +372,7 @@ public class MemoryManager {
 
     private SegmentHeader getSegmentByAddress(long address){
         for(int i = 0; i < segments; i++){
-            if(address >= i * segmentsize && address < (i+1) * segmentsize){
+            if(address >= segmentlist.get(i).startaddress && address < segmentlist.get(i).endaddress){
                 return segmentlist.get(i);
             }
         }
@@ -244,52 +382,69 @@ public class MemoryManager {
 
     //Laengenfeld
 
-    private void writeLengthField(long address, long size, int fieldsize){
+    public void writeLengthField(long address, int size, int fieldsize){
 
-        byte[] buffer = ByteBuffer.allocate(Long.BYTES).putLong(size).array();
-        byte[] convert = new byte[fieldsize];
+        byte[] buffer = ByteBuffer.allocate(Integer.BYTES).putInt(size).array();
+        int counter = 0;
+        for(int i = Integer.BYTES - fieldsize; i < Integer.BYTES; i++){
+            offHeapAccess.writeByte(address + counter + addressoffset, buffer[i]);
+            counter++;
+        }
 
-        System.arraycopy(buffer, 0, convert, 0, fieldsize);
-        writeByteArray(address, convert);
+        //byte[] convert = new byte[fieldsize];
+
+        //System.arraycopy(buffer, 0, convert, 0, fieldsize);
+        //writeByteArray(address, buffer, fieldsize);
+        /*for(int i = 0; i < fieldsize; i++){
+            byte convert = (byte) (size >>> i * 8);
+            offHeapAccess.writeByte(address + i + addressoffset, convert);
+        }*/
     }
 
-    private int readLengthField(long address){
-        int lengthfieldsize = readMarkerLowerBits(address-1);
-        if(isBlockUsed(address)) lengthfieldsize -= 8;
-
+    public int readLengthField(long address, int lengthfieldsize){
         byte[] convert = new byte[Integer.BYTES];
-        System.out.println(lengthfieldsize);
-        for(int i = 0; i < lengthfieldsize; i++){
-            convert[i] = offHeapAccess.readByte(address + i + addressoffset);
+        int counter = 0;
+        for(int i = Integer.BYTES - lengthfieldsize; i < Integer.BYTES; i++){
+            convert[i] = offHeapAccess.readByte(address + counter + addressoffset);
+            counter++;
         }
-        return ByteBuffer.wrap(convert).getInt();
+        return ByteBuffer.allocate(Integer.BYTES).put(convert).flip().getInt();
+
+        /*int value = 0;
+        for(int i = 0; i < lengthfieldsize; i++){
+            value = value | offHeapAccess.readByte(address + i + addressoffset);
+            value = value << 8;
+        }
+        return value;*/
+
 
     }
 
     //Adresslogik
 
-    private byte[] convertAddressToByteArray(long value){
-        return ByteBuffer.allocate(Long.BYTES).putLong(value).order(ByteOrder.BIG_ENDIAN).array();
+    public byte[] convertAddressToByteArray(long value){
+        return ByteBuffer.allocate(Long.BYTES).putLong(value).array();
     }
 
-    private long convertByteArrayToAddress(byte[] value){
-        byte[] convertarray = new byte[Long.BYTES];
-        System.arraycopy(value, 0, convertarray, 0, ADDRESS_SIZE);
-        return ByteBuffer.allocate(Long.BYTES).put(convertarray).flip().getLong();
+    public long convertByteArrayToAddress(byte[] value){
+        return ByteBuffer.allocate(Long.BYTES).put(value).flip().getLong();
     }
 
-    private void writeAddressField(long address, long value){
+    public void writeAddressField(long address, long value){
 
         byte[] bytearray = convertAddressToByteArray(value);
         writeAddressByteArray(address, bytearray);
 
     }
 
-    private long readAddressField(long address){
+    public long readAddressField(long address){
 
-        byte[] bytearray = new byte[ADDRESS_SIZE];
-        for(int i = 0; i < ADDRESS_SIZE; i++){
-            bytearray[i] = offHeapAccess.readByte(address + i + addressoffset);
+        int counter = 0;
+
+        byte[] bytearray = new byte[Long.BYTES];
+        for(int i = Long.BYTES - ADDRESS_SIZE - 1; i < Long.BYTES; i++){
+            bytearray[i] = offHeapAccess.readByte(address + counter + addressoffset);
+            counter++;
         }
         return convertByteArrayToAddress(bytearray);
 
@@ -300,44 +455,34 @@ public class MemoryManager {
         return readAddressField(address + lengthfieldsize);
     }
 
-    private void writeNextFreeBlock(long address, long value){
-        int lengthfieldsize = readMarkerLowerBits(address-1);
-        writeAddressField(address + lengthfieldsize, value);
-    }
 
-    private long getPreviousFreeBlock(long address){
-        int lengthfieldsize = readMarkerLowerBits(address-1);
-        return readAddressField(address + lengthfieldsize + ADDRESS_SIZE);
-    }
 
-    private void writePreviousFreeBlock(long address, long value){
-        int lengthfieldsize = readMarkerLowerBits(address-1);
-        writeAddressField(address + lengthfieldsize + ADDRESS_SIZE, value);
-    }
 
     //Markerlogik
 
-    private int readMarkerUpperBits(long address){
+    public int readMarkerUpperBits(long address){
         byte marker = offHeapAccess.readByte(address + addressoffset);
-        return marker >>> 4;
+        int value = marker & 0xFF;
+        return (byte) (value >>> 4);
     }
 
-    private int readMarkerLowerBits(long address){
+    public int readMarkerLowerBits(long address){
         byte marker = offHeapAccess.readByte(address + addressoffset);
-        return marker & 0xF;
+        int value = marker & 0xFF;
+        return (byte) (value & 0xF);
     }
 
-    private void writeMarkerUpperBits(long address, byte value){
+    public void writeMarkerUpperBits(long address, byte value){
         int lowerbits = readMarkerLowerBits(address);
         byte marker = (byte) (value << 4);
-        marker += lowerbits;
+        marker = (byte) (marker | lowerbits);
         offHeapAccess.writeByte(address + addressoffset, marker);
     }
 
-    private void writeMarkerLowerBits(long address, byte value){
+    public void writeMarkerLowerBits(long address, byte value){
         byte marker = offHeapAccess.readByte(address + addressoffset);
         marker = (byte) (marker & 0xF0);
-        marker += value;
+        marker = (byte) (marker | value);
         offHeapAccess.writeByte(address + addressoffset, marker);
     }
 
@@ -361,16 +506,22 @@ public class MemoryManager {
         else return 11;
     }
 
+    public void writeByte(long address, byte value){
+        offHeapAccess.writeByte(address + addressoffset, value);
+    }
 
-    public void writeByteArray(long address, byte[] value){
+
+    public void writeByteArray(long address, byte[] value, int length){
         for(int i = 0; i < value.length; i++){
             offHeapAccess.writeByte(address + i + addressoffset, value[i]);
         }
     }
 
     public void writeAddressByteArray(long address, byte[] value){
-        for(int i = 0; i < ADDRESS_SIZE; i++){
-            offHeapAccess.writeByte(address + i + addressoffset, value[i]);
+        int counter = 0;
+        for(int i = Long.BYTES - ADDRESS_SIZE - 1; i < Long.BYTES; i++){
+            offHeapAccess.writeByte(address + counter + addressoffset, value[i]);
+            counter++;
         }
     }
 
@@ -382,7 +533,7 @@ public class MemoryManager {
         } else {
             lengthfieldsize -= 8;
         }
-        int objectsize = readLengthField(address);
+        int objectsize = readLengthField(address, lengthfieldsize);
         byte[] object = readByteArray(address, lengthfieldsize, objectsize);
         return deserialize(object);
 
