@@ -59,7 +59,11 @@ public class MemoryManager {
                 address++;
                 createFreeBlock(address, MAX_BLOCK_SIZE, nextblock, previousblock);
                 previousblock = address;
-                nextblock = address + (MAX_BLOCK_SIZE + 1);
+                if(segment.endaddress - address >= (MAX_BLOCK_SIZE + 1) * 2){
+                    nextblock = address + (MAX_BLOCK_SIZE + 1);
+                } else {
+                    nextblock = 0;
+                }
                 address += MAX_BLOCK_SIZE;
                 writeMarkerUpperBits(address, markervalue);
             }
