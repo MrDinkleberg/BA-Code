@@ -12,6 +12,7 @@ public class SegmentHeader {
     public long fragmentedblocks;
     public double fragmentation;
     public long[] freeblocks;
+    public long usedspace;
 
     public final StampedLock lock = new StampedLock();
 
