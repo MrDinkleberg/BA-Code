@@ -35,4 +35,6 @@ public interface OffHeapAccess {
     float readFloat(long address);
 
     boolean readBoolean(long address);
+
+    void freeMemory(long address);
 }
