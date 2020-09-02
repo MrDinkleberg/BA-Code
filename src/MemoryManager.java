@@ -283,6 +283,24 @@ public class MemoryManager {
         }
     }
 
+    public void writeSerialized(long address, byte[] object) {
+        SegmentHeader segment = getSegmentByAddress(address);
+        if(segment != null) {
+            long stamp = segment.lock.writeLock();
+            try {
+                int lengthfieldsize = readMarkerLowerBits(address - 1) - 8;
+                int blocksize = readLengthField(address, lengthfieldsize);
+                if (object.length != blocksize) {
+                    System.out.println("Object is of different size");
+                } else {
+                    writeAddressByteArray(address + lengthfieldsize, object);
+                }
+            } finally {
+                segment.lock.unlockWrite(stamp);
+            }
+        }
+    }
+
     public byte[] readObject(long address){
         SegmentHeader segment = getSegmentByAddress(address);
         byte[] object = null;
