@@ -18,6 +18,7 @@ public class Benchmarks {
                 benchmarkInit(size, 10);
                 System.out.println("1GB, 20 segments:");
                 benchmarkInit(size, 20);
+                break;
             case 2:
                 System.out.println("Write benchmarks, 1GB memory");
                 System.out.println("1 segment, 1000 writes:");
@@ -26,6 +27,7 @@ public class Benchmarks {
                 benchmarkWrites(size, 10, 1000);
                 System.out.println("20 segments, 1000 writes:");
                 benchmarkWrites(size, 20, 1000);
+                break;
             case 3:
                 System.out.println("Reads after writes");
                 System.out.println("1 segment, 1000 writes/reads");
@@ -34,6 +36,7 @@ public class Benchmarks {
                 benchmarkReads(size, 10, 1000, 1000);
                 System.out.println("20 segments, 1000 writes/reads");
                 benchmarkReads(size, 20, 1000, 1000);
+                break;
             case 4:
                 System.out.println("Mixed reads and writes, 1GB memory");
                 System.out.println("1 segment, 1000 reads/writes");
@@ -42,6 +45,7 @@ public class Benchmarks {
                 benchmarkWritesReads(size, 10, 1000);
                 System.out.println("20 segment, 1000 reads/writes");
                 benchmarkWritesReads(size, 20, 1000);
+                break;
             case 5:
                 System.out.println("Writes and multiple reads");
                 System.out.println("1 segment, 1000 iterations, 10 reads per write");
@@ -50,6 +54,7 @@ public class Benchmarks {
                 benchmarkWritesMultipleReads(size, 10, 1000, 10);
                 System.out.println("20 segment, 1000 iterations, 10 reads per write");
                 benchmarkWritesMultipleReads(size, 20, 1000, 10);
+                break;
         }
     }
 
@@ -194,14 +199,6 @@ public class Benchmarks {
         es.awaitTermination(1, TimeUnit.DAYS);
 
         es = Executors.newCachedThreadPool();
-
-        for(int i = 0; i < iterations; i++){
-            Callable<Long> task = () -> memoryManager.allocateSerialized(object);
-            Future<Long> future = es.submit(task);
-            addresses[i] = future.get();
-        }
-        es.shutdown();
-        es.awaitTermination(1, TimeUnit.DAYS);
 
 
         long starttime = System.nanoTime();
