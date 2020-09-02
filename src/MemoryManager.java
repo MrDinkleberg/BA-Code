@@ -146,6 +146,44 @@ public class MemoryManager {
 
     }
 
+    public long allocateSerialized(byte[] object) {
+        byte usedmarkervalue = getUsedBlockMarkerValue(object.length);       //Markerwert des allozierten Speichers
+        int lengthfieldsize = usedmarkervalue - 8;  //berechnet Laengenfeld fuer belegten Block
+        int size = object.length + 2 * lengthfieldsize;
+        long address;
+
+        SegmentHeader segment = findSegment();
+        long stamp = segment.lock.writeLock();
+        try {
+            segment.usedspace += size;
+            int blocklist = segment.findFittingBlockList(size);         //Freispeicher-Liste in der passenden Groesse
+            address = segment.getListAnchor(blocklist);
+            long nextfreeblock = getNextFreeBlock(address);
+            int freelengthfieldsize = readMarkerLowerBits(nextfreeblock - 1);
+            writeAddressField(nextfreeblock + freelengthfieldsize + ADDRESS_SIZE, 0);
+            segment.changeListAnchor(blocklist, nextfreeblock);         //setzt den naechsten freien Block als Listenanker
+
+            int blocksize = readLengthField(address, readMarkerLowerBits(address - 1));    //Groesse des angeforderten Blocks
+            int newblocksize = blocksize - size;                       //Groesse des neuen freien Blocks
+
+            long newblockaddress = address + size + 1;                  //Adresse des neuen freien Blocks
+
+            writeMarkerLowerBits(address - 1, usedmarkervalue);
+            writeLengthField(address, object.length, lengthfieldsize);
+            writeByteArray(address + lengthfieldsize, object, object.length);
+            writeLengthField(address + lengthfieldsize + object.length, object.length, lengthfieldsize);
+            createNewTrailerMarker(address + size, usedmarkervalue);
+            if(newblocksize > 0) {
+                cutFreeBlock(segment, newblockaddress, newblocksize); //erstellt aus ueberschuessigem Speicher neuen freien Block
+            }
+        } finally {
+            segment.lock.unlockWrite(stamp);
+        }
+        return address;
+
+
+    }
+
     public void deallocate(long address){
         SegmentHeader segment = getSegmentByAddress(address);
 
@@ -247,9 +285,9 @@ public class MemoryManager {
 
     public byte[] readObject(long address){
         SegmentHeader segment = getSegmentByAddress(address);
+        byte[] object = null;
         if(segment!=null) {
             long stamp = segment.lock.tryOptimisticRead();
-            byte[] object = null;
             for (int i = 0; i < 3; i++) {
                 int lengthfieldsize = readMarkerLowerBits(address - 1);
                 if (lengthfieldsize >= 1 && lengthfieldsize <= 3) {
@@ -278,10 +316,9 @@ public class MemoryManager {
 
             } finally {
                 segment.lock.unlockRead(stamp);
-                return object;
             }
         }
-        else return null;
+        return object;
     }
 
     private void cutFreeBlock(SegmentHeader segment, long newblockaddress, int newblocksize){
