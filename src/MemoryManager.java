@@ -19,7 +19,7 @@ public class MemoryManager {
     private final OffHeapAccess offHeapAccess;
     private final long addressoffset;
     private final long offheapsize;
-    private int segments;
+    private final int segments;
     private final int initblocksize;
     private Random random;
     public SegmentHeader[] segmentlist;
@@ -47,7 +47,7 @@ public class MemoryManager {
 
     public void createSegments(int segments) throws InterruptedException {
         long segmentsize = (int) offheapsize / segments;
-        ExecutorService es = Executors.newCachedThreadPool();
+        ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         long segmentstart = 0;
 
         for(int i = 0; i < segments; i++){

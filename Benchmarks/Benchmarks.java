@@ -240,7 +240,7 @@ public class Benchmarks {
         byte[] object = new byte[64];
         long[] addresses = new long[writes];
 
-        ExecutorService es = Executors.newFixedThreadPool(writes);
+        ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
         long starttime = System.nanoTime();
 
@@ -272,7 +272,7 @@ public class Benchmarks {
         long[] addresses = new long[writes];
         byte[][] objects = new byte[reads][64];
 
-        ExecutorService es = Executors.newFixedThreadPool(writes);
+        ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 
         for(int i = 0; i < writes; i++){
@@ -283,7 +283,7 @@ public class Benchmarks {
         es.shutdown();
         es.awaitTermination(1, TimeUnit.HOURS);
 
-        es = Executors.newFixedThreadPool(reads);
+        es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
         long starttime = System.nanoTime();
 
@@ -315,7 +315,7 @@ public class Benchmarks {
         long[] addresses = new long[iterations];
         byte[][] objects = new byte[iterations][64];
         Random rand = new Random();
-        ExecutorService es = Executors.newFixedThreadPool(iterations);
+        ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 
         for(int i = 0; i < iterations; i++){
@@ -326,7 +326,7 @@ public class Benchmarks {
         es.shutdown();
         es.awaitTermination(1, TimeUnit.HOURS);
 
-        es = Executors.newCachedThreadPool();
+        es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
         long starttime = System.nanoTime();
 
@@ -363,7 +363,7 @@ public class Benchmarks {
         long[] addresses = new long[iterations];
         byte[][] objects = new byte[iterations][64];
         Random rand = new Random();
-        ExecutorService es = Executors.newFixedThreadPool(iterations);
+        ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
         for(int i = 0; i < iterations; i++){
             Callable<Long> task = () -> memoryManager.allocateSerialized(object);
@@ -373,7 +373,7 @@ public class Benchmarks {
         es.shutdown();
         es.awaitTermination(1, TimeUnit.HOURS);
 
-        es = Executors.newCachedThreadPool();
+        es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 
         long starttime = System.nanoTime();
