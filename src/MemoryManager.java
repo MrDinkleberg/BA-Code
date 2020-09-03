@@ -16,12 +16,11 @@ public class MemoryManager {
 
 
 
-    private OffHeapAccess offHeapAccess;
-    private long addressoffset;
-    private long offheapsize;
-    private long segmentsize;
+    private final OffHeapAccess offHeapAccess;
+    private final long addressoffset;
+    private final long offheapsize;
     private int segments;
-    private int initblocksize;
+    private final int initblocksize;
     private Random random;
     public SegmentHeader[] segmentlist;
 
@@ -47,7 +46,7 @@ public class MemoryManager {
     }
 
     public void createSegments(int segments) throws InterruptedException {
-        segmentsize = (int) offheapsize/segments;
+        long segmentsize = (int) offheapsize / segments;
         ExecutorService es = Executors.newCachedThreadPool();
         long segmentstart = 0;
 
@@ -472,7 +471,12 @@ public class MemoryManager {
     //Segmente
 
     private SegmentHeader findSegment(){
-        return segmentlist[random.nextInt(segments)];
+        int index = 0;
+
+        for(int i = 0; i < segments; i++){
+            if(segmentlist[i].usedspace < segmentlist[index].usedspace) index = i;
+        }
+        return segmentlist[index];
     }
 
     private SegmentHeader getSegmentByAddress(long address){
