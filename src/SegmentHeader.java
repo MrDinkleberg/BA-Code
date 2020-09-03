@@ -18,6 +18,7 @@ public class SegmentHeader {
     public SegmentHeader(long startaddress, long size) {
         this.startaddress = startaddress;
         this.endaddress = startaddress + size;
+        this.usedspace = 0;
         freeblocks = new long[MAXBLOCKSIZE_EXPONENT+1];
     }
 

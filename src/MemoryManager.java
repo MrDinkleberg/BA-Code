@@ -1,6 +1,7 @@
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -21,10 +22,12 @@ public class MemoryManager {
     private long segmentsize;
     private int segments;
     private int initblocksize;
+    private Random random;
     public SegmentHeader[] segmentlist;
 
     public MemoryManager(long size, int segments, int initblocksize) throws NoSuchFieldException, IllegalAccessException, InterruptedException {
         this.initblocksize = Math.min(initblocksize, MAX_BLOCK_SIZE);
+        random = new Random();
         this.offheapsize = Math.max(size, segments * (initblocksize + 2));
         this.offHeapAccess = new OffHeap(offheapsize);
         addressoffset = ((OffHeap) offHeapAccess).startaddress;
@@ -469,12 +472,7 @@ public class MemoryManager {
     //Segmente
 
     private SegmentHeader findSegment(){
-        int index = 0;
-
-        for(int i = 0; i < segments; i++){
-            if(segmentlist[i].usedspace > segmentlist[index].usedspace) index = i;
-        }
-        return segmentlist[index];
+        return segmentlist[random.nextInt(segments)];
     }
 
     private SegmentHeader getSegmentByAddress(long address){

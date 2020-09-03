@@ -10,7 +10,7 @@ public class Benchmarks {
         int testitertions = Integer.parseInt(args[3]);
         double duration = 0;
 
-        System.out.println(args[1] + "GB Memory");
+        System.out.println(args[1] + "00MB Memory");
 
         switch (mode){
             case 1:
@@ -123,7 +123,7 @@ public class Benchmarks {
                 duration = 0;
                 System.out.println("12 segment, 1000 writes/reads");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkReads(size, 12, initblocksize, 5000, 5000);
+                    duration += benchmarkReads(size, 12, initblocksize, 100, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
