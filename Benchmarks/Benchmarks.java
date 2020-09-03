@@ -5,7 +5,8 @@ public class Benchmarks {
 
     public static void main(String[] args) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
         int mode = Integer.parseInt(args[0]);
-        long size = Long.parseLong(args[1]) * 1000000000;
+        long size = Long.parseLong(args[1]) * 100000000;
+        int initblocksize = Integer.parseInt(args[2]) * 1000000;
 
         System.out.println(args[1] + "GB Memory");
 
@@ -13,47 +14,47 @@ public class Benchmarks {
             case 1:
                 System.out.println("Init benchmarks");
                 System.out.println("1 segment:");
-                benchmarkInit(size, 1);
+                benchmarkInit(size, 1, initblocksize);
                 System.out.println("10 segments:");
-                benchmarkInit(size, 10);
+                benchmarkInit(size, 10, initblocksize);
                 System.out.println("20 segments:");
-                benchmarkInit(size, 20);
+                benchmarkInit(size, 20, initblocksize);
                 break;
             case 2:
                 System.out.println("Write benchmarks");
                 System.out.println("1 segment, 1000 writes:");
-                benchmarkAllocations(size, 1, 1000);
+                benchmarkAllocations(size, 1, initblocksize, 1000);
                 System.out.println("10 segments, 1000 writes:");
-                benchmarkAllocations(size, 10, 1000);
+                benchmarkAllocations(size, 10, initblocksize, 1000);
                 System.out.println("20 segments, 1000 writes:");
-                benchmarkAllocations(size, 20, 1000);
+                benchmarkAllocations(size, 20, initblocksize, 1000);
                 break;
             case 3:
                 System.out.println("Reads after writes");
                 System.out.println("1 segment, 1000 writes/reads");
-                benchmarkReads(size, 1, 1000, 1000);
+                benchmarkReads(size, 1, initblocksize, 1000, 1000);
                 System.out.println("10 segments, 1000 writes/reads");
-                benchmarkReads(size, 10, 1000, 1000);
+                benchmarkReads(size, 10, initblocksize, 1000, 1000);
                 System.out.println("20 segments, 1000 writes/reads");
-                benchmarkReads(size, 20, 1000, 1000);
+                benchmarkReads(size, 20, initblocksize, 1000, 1000);
                 break;
             case 4:
                 System.out.println("Mixed reads and writes");
                 System.out.println("1 segment, 1000 reads/writes");
-                benchmarkWritesReads(size, 1, 1000);
+                benchmarkWritesReads(size, 1, initblocksize, 1000);
                 System.out.println("10 segment, 1000 reads/writes");
-                benchmarkWritesReads(size, 10, 1000);
+                benchmarkWritesReads(size, 10, initblocksize, 1000);
                 System.out.println("20 segment, 1000 reads/writes");
-                benchmarkWritesReads(size, 20, 1000);
+                benchmarkWritesReads(size, 20, initblocksize, 1000);
                 break;
             case 5:
                 System.out.println("Writes and multiple reads");
                 System.out.println("1 segment, 1000 iterations, 10 reads per write");
-                benchmarkWritesMultipleReads(size, 1, 1000, 10);
+                benchmarkWritesMultipleReads(size, 1, initblocksize, 1000, 10);
                 System.out.println("10 segment, 1000 iterations, 10 reads per write");
-                benchmarkWritesMultipleReads(size, 10, 1000, 10);
+                benchmarkWritesMultipleReads(size, 10, initblocksize, 1000, 10);
                 System.out.println("20 segment, 1000 iterations, 10 reads per write");
-                benchmarkWritesMultipleReads(size, 20, 1000, 10);
+                benchmarkWritesMultipleReads(size, 20, initblocksize, 1000, 10);
                 break;
         }
     }
@@ -61,9 +62,9 @@ public class Benchmarks {
 
 
 
-    public static void benchmarkInit(long size, int segments) throws IllegalAccessException, InterruptedException, NoSuchFieldException {
+    public static void benchmarkInit(long size, int segments, int initblocksize) throws IllegalAccessException, InterruptedException, NoSuchFieldException {
         long starttime = System.nanoTime();
-        MemoryManager memoryManager = new MemoryManager(size, segments);
+        MemoryManager memoryManager = new MemoryManager(size, segments, initblocksize);
 
         long endtime = System.nanoTime();
 
@@ -72,9 +73,9 @@ public class Benchmarks {
         memoryManager.cleanup();
 
     }
-    public static  void benchmarkAllocations(long size, int segments, int writes) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
+    public static  void benchmarkAllocations(long size, int segments, int initblocksize, int writes) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
 
-        MemoryManager memoryManager = new MemoryManager(size, segments);
+        MemoryManager memoryManager = new MemoryManager(size, segments, initblocksize);
         byte[] object = new byte[64];
         long[] addresses = new long[writes];
 
@@ -98,9 +99,9 @@ public class Benchmarks {
         memoryManager.cleanup();
     }
 
-    public static  void benchmarkReads(long size, int segments, int writes, int reads) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
+    public static  void benchmarkReads(long size, int segments, int initblocksize, int writes, int reads) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
 
-        MemoryManager memoryManager = new MemoryManager(size, segments);
+        MemoryManager memoryManager = new MemoryManager(size, segments, initblocksize);
         byte[] object = new byte[64];
 
         long[] addresses = new long[writes];
@@ -137,9 +138,9 @@ public class Benchmarks {
         memoryManager.cleanup();
     }
 
-    public static  void benchmarkWritesReads(long size, int segments, int iterations) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
+    public static  void benchmarkWritesReads(long size, int segments, int initblocksize, int iterations) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
 
-        MemoryManager memoryManager = new MemoryManager(size, segments);
+        MemoryManager memoryManager = new MemoryManager(size, segments, initblocksize);
         byte[] object = new byte[64];
         long[] addresses = new long[iterations];
         byte[][] objects = new byte[iterations][64];
@@ -181,9 +182,9 @@ public class Benchmarks {
         memoryManager.cleanup();
     }
 
-    public static  void benchmarkWritesMultipleReads(long size, int segments, int iterations, int reads) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
+    public static  void benchmarkWritesMultipleReads(long size, int segments, int initblocksize, int iterations, int reads) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
 
-        MemoryManager memoryManager = new MemoryManager(size, segments);
+        MemoryManager memoryManager = new MemoryManager(size, segments, initblocksize);
         byte[] object = new byte[64];
         long[] addresses = new long[iterations];
         byte[][] objects = new byte[iterations][64];
