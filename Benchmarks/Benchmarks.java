@@ -357,6 +357,8 @@ public class Benchmarks {
         byte[][] objects = new byte[iterations][64];
         Random addressselector = new Random();
         Random accessselector = new Random();
+        int writecounter= iterations;
+        int readcounter = iterations * readsperwrite;
         ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
         for(int i = 0; i < iterations; i++){
@@ -375,12 +377,16 @@ public class Benchmarks {
 
         for(int i = 0; i < iterations; i++) {
             int access = accessselector.nextInt(1 + readsperwrite);
+            if(access == 0 && writecounter == 0) access = 1;
+            if(access != 0 && readcounter == 0) access = 0;
             if(access == 0){
+                writecounter--;
                 long addressw = addresses[addressselector.nextInt(iterations)];
                 Runnable wtask = () -> memoryManager.writeSerialized(addressw, object);
                 es.submit(wtask);
             }else {
                 for (int j = 0; j < readsperwrite; j++) {
+                    readcounter--;
                     long addressr = addresses[addressselector.nextInt(iterations)];
                     Callable<byte[]> rtask = () -> memoryManager.readObject(addressr);
                     Future<byte[]> rfuture = es.submit(rtask);
