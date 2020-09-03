@@ -12,15 +12,15 @@ public class Benchmarks {
         switch (mode){
             case 1:
                 System.out.println("Init benchmarks");
-                System.out.println("1GB, 1 segment:");
+                System.out.println("1 segment:");
                 benchmarkInit(size, 1);
-                System.out.println("1GB, 10 segments:");
+                System.out.println("10 segments:");
                 benchmarkInit(size, 10);
-                System.out.println("1GB, 20 segments:");
+                System.out.println("20 segments:");
                 benchmarkInit(size, 20);
                 break;
             case 2:
-                System.out.println("Write benchmarks, 1GB memory");
+                System.out.println("Write benchmarks");
                 System.out.println("1 segment, 1000 writes:");
                 benchmarkWrites(size, 1, 1000);
                 System.out.println("10 segments, 1000 writes:");
@@ -38,7 +38,7 @@ public class Benchmarks {
                 benchmarkReads(size, 20, 1000, 1000);
                 break;
             case 4:
-                System.out.println("Mixed reads and writes, 1GB memory");
+                System.out.println("Mixed reads and writes");
                 System.out.println("1 segment, 1000 reads/writes");
                 benchmarkWritesReads(size, 1, 1000);
                 System.out.println("10 segment, 1000 reads/writes");
