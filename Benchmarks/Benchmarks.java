@@ -88,7 +88,7 @@ public class Benchmarks {
             addresses[i] = future.get();
         }
         es.shutdown();
-        es.awaitTermination(1, TimeUnit.DAYS);
+        es.awaitTermination(1, TimeUnit.MINUTES);
 
 
         long endtime = System.nanoTime();
@@ -115,7 +115,7 @@ public class Benchmarks {
             addresses[i] = future.get();
         }
         es.shutdown();
-        es.awaitTermination(1, TimeUnit.DAYS);
+        es.awaitTermination(1, TimeUnit.MINUTES);
 
         es = Executors.newCachedThreadPool();
 
@@ -128,7 +128,7 @@ public class Benchmarks {
             objects[i] = future.get();
         }
         es.shutdown();
-        es.awaitTermination(1, TimeUnit.DAYS);
+        es.awaitTermination(1, TimeUnit.MINUTES);
 
         long endtime = System.nanoTime();
 
@@ -153,7 +153,7 @@ public class Benchmarks {
             addresses[i] = future.get();
         }
         es.shutdown();
-        es.awaitTermination(1, TimeUnit.DAYS);
+        es.awaitTermination(1, TimeUnit.MINUTES);
 
         es = Executors.newCachedThreadPool();
 
@@ -171,7 +171,7 @@ public class Benchmarks {
         }
 
         es.shutdown();
-        es.awaitTermination(1, TimeUnit.DAYS);
+        es.awaitTermination(1, TimeUnit.MINUTES);
 
 
         long endtime = System.nanoTime();
@@ -196,7 +196,7 @@ public class Benchmarks {
             addresses[i] = future.get();
         }
         es.shutdown();
-        es.awaitTermination(1, TimeUnit.DAYS);
+        es.awaitTermination(1, TimeUnit.MINUTES);
 
         es = Executors.newCachedThreadPool();
 
@@ -217,7 +217,7 @@ public class Benchmarks {
         }
 
         es.shutdown();
-        es.awaitTermination(1, TimeUnit.DAYS);
+        es.awaitTermination(1, TimeUnit.MINUTES);
 
 
         long endtime = System.nanoTime();

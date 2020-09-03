@@ -3,12 +3,10 @@ import java.util.concurrent.locks.StampedLock;
 public class SegmentHeader {
 
     public static final int MAXBLOCKSIZE_EXPONENT = 24;
-    public static final long MAX_BLOCK_SIZE = 16000000L;
 
     public long startaddress;
     public long endaddress;
     public int maxblocksize;
-    public long blocks;
     public long fragmentedblocks;
     public double fragmentation;
     public long[] freeblocks;
@@ -20,7 +18,6 @@ public class SegmentHeader {
     public SegmentHeader(long startaddress, long size) {
         this.startaddress = startaddress;
         this.endaddress = startaddress + size;
-        this.blocks = (int) (size / MAX_BLOCK_SIZE + 1);
         freeblocks = new long[MAXBLOCKSIZE_EXPONENT+1];
     }
 

@@ -20,10 +20,22 @@ public class MemoryManager {
     private long offheapsize;
     private long segmentsize;
     private int segments;
+    private int initblocksize;
     public SegmentHeader[] segmentlist;
+
+    public MemoryManager(long size, int segments, int initblocksize) throws NoSuchFieldException, IllegalAccessException, InterruptedException {
+        this.initblocksize = Math.min(initblocksize, MAX_BLOCK_SIZE);
+        this.offheapsize = Math.max(size, segments * (initblocksize + 2));
+        this.offHeapAccess = new OffHeap(offheapsize);
+        addressoffset = ((OffHeap) offHeapAccess).startaddress;
+        segmentlist = new SegmentHeader[segments];
+        this.segments = segments;
+        createSegments(segments);
+    }
 
     public MemoryManager(long size, int segments) throws NoSuchFieldException, IllegalAccessException, InterruptedException {
         this.offheapsize = Math.max(size, segments * (MAX_BLOCK_SIZE + 2));
+        this.initblocksize = MAX_BLOCK_SIZE;
         this.offHeapAccess = new OffHeap(offheapsize);
         addressoffset = ((OffHeap) offHeapAccess).startaddress;
         segmentlist = new SegmentHeader[segments];
@@ -43,7 +55,7 @@ public class MemoryManager {
             es.execute(() -> initSegment(segment));
         }
         es.shutdown();
-        es.awaitTermination(1, TimeUnit.DAYS);
+        es.awaitTermination(1, TimeUnit.MINUTES);
     }
 
     private void initSegment(SegmentHeader segment){
@@ -51,21 +63,21 @@ public class MemoryManager {
         try {
             long address = segment.startaddress;
             long previousblock = 0;                                     //Pointer für Verkettung der freien Bloecke
-            long nextblock = address + (MAX_BLOCK_SIZE + 2);
-            segment.changeListAnchor(segment.findExactBlockList(MAX_BLOCK_SIZE), address + 1);  //setzt Anker fuer Freie-Bloecke-Liste
-            byte markervalue = getFreeBlockMarkerValue(MAX_BLOCK_SIZE);
+            long nextblock = address + (initblocksize + 2);
+            segment.changeListAnchor(segment.findExactBlockList(initblocksize), address + 1);  //setzt Anker fuer Freie-Bloecke-Liste
+            byte markervalue = getFreeBlockMarkerValue(initblocksize);
 
-            while (segment.endaddress - address >= MAX_BLOCK_SIZE + 1) {    //erstellt freie Bloecke maximaler Groesse und verkettet sie in die Liste
+            while (segment.endaddress - address >= initblocksize + 1) {    //erstellt freie Bloecke maximaler Groesse und verkettet sie in die Liste
                 writeMarkerLowerBits(address, markervalue);
                 address++;
-                createFreeBlock(address, MAX_BLOCK_SIZE, nextblock, previousblock);
+                createFreeBlock(address, initblocksize, nextblock, previousblock);
                 previousblock = address;
-                if(segment.endaddress - address >= (MAX_BLOCK_SIZE + 1) * 2){
-                    nextblock = address + (MAX_BLOCK_SIZE + 1);
+                if(segment.endaddress - address >= (initblocksize + 1) * 2){
+                    nextblock = address + (initblocksize + 1);
                 } else {
                     nextblock = 0;
                 }
-                address += MAX_BLOCK_SIZE;
+                address += initblocksize;
                 writeMarkerUpperBits(address, markervalue);
             }
 
@@ -196,24 +208,24 @@ public class MemoryManager {
                 long freeblockstart = address;
                 long previousblock;
 
-                if (isBlockInSegment(freeblockstart - 2, segment) && isPreviousBlockFree(freeblockstart) && freeblocksize < MAX_BLOCK_SIZE) {
+                if (isBlockInSegment(freeblockstart - 2, segment) && isPreviousBlockFree(freeblockstart) && freeblocksize < initblocksize) {
                     previousblock = getPreviousBlock(freeblockstart);
                     int prevmarker = readMarkerLowerBits(previousblock - 1);
                     if (prevmarker == 0) {
                         int prevsize = readLengthField(previousblock, 1);
-                        if (freeblocksize + prevsize + 1 <= MAX_BLOCK_SIZE) {
+                        if (freeblocksize + prevsize + 1 <= initblocksize) {
                             freeblocksize += prevsize;
                             freeblockstart = previousblock;
                         }
                     } else if (prevmarker == 15) {
                         int prevsize = 1;
-                        if (freeblocksize + prevsize + 1 <= MAX_BLOCK_SIZE) {
+                        if (freeblocksize + prevsize + 1 <= initblocksize) {
                             freeblocksize += prevsize;
                             freeblockstart = previousblock;
                         }
                     } else {
                         int prevsize = readLengthField(previousblock, prevmarker);
-                        if (freeblocksize + prevsize + 1 <= MAX_BLOCK_SIZE) {
+                        if (freeblocksize + prevsize + 1 <= initblocksize) {
                             removeBlockFromFreeBlockList(previousblock);
                             freeblocksize += prevsize;
                             freeblockstart = previousblock;
@@ -224,21 +236,21 @@ public class MemoryManager {
                 long nextblock = getNextBlock(address);
 
 
-                if (isBlockInSegment(nextblock, segment) && isNextBlockFree(address) && freeblocksize < MAX_BLOCK_SIZE) {
+                if (isBlockInSegment(nextblock, segment) && isNextBlockFree(address) && freeblocksize < initblocksize) {
                     int nextmarker = readMarkerLowerBits(nextblock - 1);
                     if (nextmarker == 0) {
                         int nextblocksize = readLengthField(nextblock, 1);
-                        if (freeblocksize + nextblocksize + 1 <= MAX_BLOCK_SIZE) {
+                        if (freeblocksize + nextblocksize + 1 <= initblocksize) {
                             freeblocksize += nextblocksize + 1;
                         }
                     } else if (nextmarker == 15) {
                         int nextblocksize = 1;
-                        if (freeblocksize + nextblocksize + 1 <= MAX_BLOCK_SIZE) {
+                        if (freeblocksize + nextblocksize + 1 <= initblocksize) {
                             freeblocksize += nextblocksize + 1;
                         }
                     } else {
                         int nextblocksize = readLengthField(nextblock, nextmarker);
-                        if (freeblocksize + nextblocksize <= MAX_BLOCK_SIZE) {
+                        if (freeblocksize + nextblocksize <= initblocksize) {
                             freeblocksize += nextblocksize + 1;
                             removeBlockFromFreeBlockList(nextblock);
                         }
