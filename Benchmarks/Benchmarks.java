@@ -59,37 +59,37 @@ public class Benchmarks {
                 duration = 0;
                 System.out.println("1 segment, 1000 writes:");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkAllocations(size, 1, initblocksize, 5000);
+                    duration += benchmarkAllocations(size, 1, initblocksize, 1000);
                 System.out.println("Average Time (" + testitertions + " runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("2 segments, 1000 writes:");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkAllocations(size, 2, initblocksize, 5000);
+                    duration += benchmarkAllocations(size, 2, initblocksize, 1000);
                 System.out.println("Average Time (" + testitertions + " runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("4 segments, 1000 writes:");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkAllocations(size, 4, initblocksize, 5000);
+                    duration += benchmarkAllocations(size, 4, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("6 segment, 1000 writes:");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkAllocations(size, 6, initblocksize, 5000);
+                    duration += benchmarkAllocations(size, 6, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("12 segment, 1000 writes:");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkAllocations(size, 12, initblocksize, 5000);
+                    duration += benchmarkAllocations(size, 12, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("24 segment, 1000 writes:");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkAllocations(size, 24, initblocksize, 5000);
+                    duration += benchmarkAllocations(size, 24, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 break;
@@ -99,25 +99,25 @@ public class Benchmarks {
                 duration = 0;
                 System.out.println("1 segment, 1000 writes/reads");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkReads(size, 1, initblocksize, 5000, 5000);
+                    duration += benchmarkReads(size, 1, initblocksize, 1000, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("2 segments, 1000 writes/reads");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkReads(size, 2, initblocksize, 5000, 5000);
+                    duration += benchmarkReads(size, 2, initblocksize, 1000, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("4 segments, 1000 writes/reads");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkReads(size, 4, initblocksize, 5000, 5000);
+                    duration += benchmarkReads(size, 4, initblocksize, 1000, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("6 segment, 1000 writes/reads");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkReads(size, 6, initblocksize, 5000, 5000);
+                    duration += benchmarkReads(size, 6, initblocksize, 1000, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
@@ -129,7 +129,7 @@ public class Benchmarks {
                 duration = 0;
                 System.out.println("24 segment, 1000 writes/reads");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkReads(size, 24, initblocksize, 5000, 5000);
+                    duration += benchmarkReads(size, 24, initblocksize, 1000, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 break;
@@ -139,37 +139,37 @@ public class Benchmarks {
                 duration = 0;
                 System.out.println("1 segment, 1000 reads/writes");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesReads(size, 1, initblocksize, 5000);
+                    duration += benchmarkWritesReads(size, 1, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("2 segment, 1000 reads/writes");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesReads(size, 2, initblocksize, 5000);
+                    duration += benchmarkWritesReads(size, 2, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("4 segment, 1000 reads/writes");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesReads(size, 4, initblocksize, 10000);
+                    duration += benchmarkWritesReads(size, 4, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("6 segment, 1000 reads/writes");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesReads(size, 6, initblocksize, 5000);
+                    duration += benchmarkWritesReads(size, 6, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("12 segment, 1000 reads/writes");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesReads(size, 12, initblocksize, 5000);
+                    duration += benchmarkWritesReads(size, 12, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("24 segment, 1000 reads/writes");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesReads(size, 24, initblocksize, 5000);
+                    duration += benchmarkWritesReads(size, 24, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 break;
@@ -179,37 +179,37 @@ public class Benchmarks {
                 duration = 0;
                 System.out.println("1 segment, 1000 iterations, 10 reads per write");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesMultipleReads(size, 1, initblocksize, 5000, 10);
+                    duration += benchmarkWritesMultipleReads(size, 1, initblocksize, 1000, 10);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("2 segment, 1000 iterations, 10 reads per write");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesMultipleReads(size, 2, initblocksize, 5000, 10);
+                    duration += benchmarkWritesMultipleReads(size, 2, initblocksize, 1000, 10);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("4 segment, 1000 iterations, 10 reads per write");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesMultipleReads(size, 4, initblocksize, 5000, 10);
+                    duration += benchmarkWritesMultipleReads(size, 4, initblocksize, 1000, 10);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("6 segment, 1000 iterations, 10 reads per write");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesMultipleReads(size, 6, initblocksize, 5000, 10);
+                    duration += benchmarkWritesMultipleReads(size, 6, initblocksize, 1000, 10);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("12 segment, 1000 iterations, 10 reads per write");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesMultipleReads(size, 12, initblocksize, 5000, 10);
+                    duration += benchmarkWritesMultipleReads(size, 12, initblocksize, 1000, 10);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("24 segment, 1000 iterations, 10 reads per write");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkWritesMultipleReads(size, 24, initblocksize, 5000, 10);
+                    duration += benchmarkWritesMultipleReads(size, 24, initblocksize, 1000, 10);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 break;
@@ -240,7 +240,7 @@ public class Benchmarks {
         byte[] object = new byte[64];
         long[] addresses = new long[writes];
 
-        ExecutorService es = Executors.newCachedThreadPool();
+        ExecutorService es = Executors.newFixedThreadPool(writes);
 
         long starttime = System.nanoTime();
 
@@ -272,7 +272,7 @@ public class Benchmarks {
         long[] addresses = new long[writes];
         byte[][] objects = new byte[reads][64];
 
-        ExecutorService es = Executors.newCachedThreadPool();
+        ExecutorService es = Executors.newFixedThreadPool(writes);
 
 
         for(int i = 0; i < writes; i++){
@@ -283,7 +283,7 @@ public class Benchmarks {
         es.shutdown();
         es.awaitTermination(1, TimeUnit.MINUTES);
 
-        es = Executors.newCachedThreadPool();
+        es = Executors.newFixedThreadPool(reads);
 
         long starttime = System.nanoTime();
 
@@ -315,7 +315,7 @@ public class Benchmarks {
         long[] addresses = new long[iterations];
         byte[][] objects = new byte[iterations][64];
         Random rand = new Random();
-        ExecutorService es = Executors.newCachedThreadPool();
+        ExecutorService es = Executors.newFixedThreadPool(iterations);
 
 
         for(int i = 0; i < iterations; i++){
@@ -363,7 +363,7 @@ public class Benchmarks {
         long[] addresses = new long[iterations];
         byte[][] objects = new byte[iterations][64];
         Random rand = new Random();
-        ExecutorService es = Executors.newCachedThreadPool();
+        ExecutorService es = Executors.newFixedThreadPool(iterations);
 
         for(int i = 0; i < iterations; i++){
             Callable<Long> task = () -> memoryManager.allocateSerialized(object);
