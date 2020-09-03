@@ -22,11 +22,11 @@ public class Benchmarks {
             case 2:
                 System.out.println("Write benchmarks");
                 System.out.println("1 segment, 1000 writes:");
-                benchmarkWrites(size, 1, 1000);
+                benchmarkAllocations(size, 1, 1000);
                 System.out.println("10 segments, 1000 writes:");
-                benchmarkWrites(size, 10, 1000);
+                benchmarkAllocations(size, 10, 1000);
                 System.out.println("20 segments, 1000 writes:");
-                benchmarkWrites(size, 20, 1000);
+                benchmarkAllocations(size, 20, 1000);
                 break;
             case 3:
                 System.out.println("Reads after writes");
@@ -72,7 +72,7 @@ public class Benchmarks {
         memoryManager.cleanup();
 
     }
-    public static  void benchmarkWrites(long size, int segments, int writes) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
+    public static  void benchmarkAllocations(long size, int segments, int writes) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
 
         MemoryManager memoryManager = new MemoryManager(size, segments);
         byte[] object = new byte[64];
