@@ -59,25 +59,25 @@ public class Benchmarks {
                 duration = 0;
                 System.out.println("1 segment, 5000 allocations:");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkAllocations(size, 1, initblocksize, 5000);
+                    duration += benchmarkAllocations(size, 1, initblocksize, 1000);
                 System.out.println("Average Time (" + testitertions + " runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("2 segments, 5000 allocations:");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkAllocations(size, 2, initblocksize, 5000);
+                    duration += benchmarkAllocations(size, 2, initblocksize, 1000);
                 System.out.println("Average Time (" + testitertions + " runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("4 segments, 5000 allocations:");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkAllocations(size, 4, initblocksize, 5000);
+                    duration += benchmarkAllocations(size, 4, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
                 System.out.println("6 segment, 5000 allocations:");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkAllocations(size, 6, initblocksize, 5000);
+                    duration += benchmarkAllocations(size, 6, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 duration = 0;
@@ -89,7 +89,7 @@ public class Benchmarks {
                 duration = 0;
                 System.out.println("24 segment, 5000 allocations:");
                 for(int i = 0; i < testitertions; i++)
-                    duration += benchmarkAllocations(size, 24, initblocksize, 5000);
+                    duration += benchmarkAllocations(size, 24, initblocksize, 1000);
                 System.out.println("Average Time ("+ testitertions +" runs): " + duration/(double) testitertions);
 
                 break;
@@ -278,7 +278,7 @@ public class Benchmarks {
     public static double benchmarkAllocations(long size, int segments, int initblocksize, int writes) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
 
         MemoryManager memoryManager = new MemoryManager(size, segments, initblocksize);
-        byte[] object = new byte[64];
+        byte[] object = new byte[500000];
         long[] addresses = new long[writes];
 
         ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -308,10 +308,10 @@ public class Benchmarks {
     public static double benchmarkReads(long size, int segments, int initblocksize, int writes, int reads) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
 
         MemoryManager memoryManager = new MemoryManager(size, segments, initblocksize);
-        byte[] object = new byte[64];
+        byte[] object = new byte[500000];
 
         long[] addresses = new long[writes];
-        byte[][] objects = new byte[reads][64];
+        byte[][] objects = new byte[reads][500000];
 
         ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
@@ -352,9 +352,9 @@ public class Benchmarks {
     public static double benchmarkWritesAndReads(long size, int segments, int initblocksize, int iterations, int readsperwrite) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
 
         MemoryManager memoryManager = new MemoryManager(size, segments, initblocksize);
-        byte[] object = new byte[64];
+        byte[] object = new byte[500000];
         long[] addresses = new long[iterations];
-        byte[][] objects = new byte[iterations][64];
+        byte[][] objects = new byte[iterations][500000];
         Random addressselector = new Random();
         Random accessselector = new Random();
         int writecounter= iterations;
