@@ -39,7 +39,7 @@ public class SegmentHeader {
 
 
         for(int i = 4; i <= MAXBLOCKSIZE_EXPONENT; i++ ){                                       //ab der fuenften Liste wird in der i-ten Liste
-            if(size >= Math.pow(2, i+2) && size < Math.pow(2, i+3) && freeblocks[i] != 0 ){    //Bloecke der Groesse 2^(i+1) bis 2^(i+2)-1
+            if(size >= Math.pow(2, i+2) && size < Math.pow(2, i+3)){    //Bloecke der Groesse 2^(i+1) bis 2^(i+2)-1
                 index = i;                                                                      //gespeichert (Array-Indizes, deshalb erste Liste
             }                                                                                  //bei i=0)
         }
@@ -60,7 +60,7 @@ public class SegmentHeader {
             }                                                                                  //bei i=0)
         }
 
-        return 0;
+        return MAXBLOCKSIZE_EXPONENT;
     }
 
     public void changeListAnchor(int index, long address){
