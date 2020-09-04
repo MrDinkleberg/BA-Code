@@ -576,9 +576,8 @@ public class MemoryManager {
     }
 
     private void removeBlockFromFreeBlockList(long address){
-        SegmentHeader segment = getSegmentByAddress(address);
         long nextblock = getNextFreeBlock(address);
-        long prevblock = getPreviousBlock(address);
+        long prevblock = getPreviousFreeBlock(address);
         if(nextblock != 0) {
             int nextblocklengthfield = readMarkerLowerBits(nextblock - 1);
             writeAddressField(nextblock + nextblocklengthfield + ADDRESS_SIZE, prevblock);
