@@ -132,12 +132,18 @@ public class MemoryManager {
             segment.usedspace += size;
             int blocklist = segment.findFittingBlockList(size);         //Freispeicher-Liste in der passenden Groesse
             address = segment.getListAnchor(blocklist);
-            long nextfreeblock = getNextFreeBlock(address);
-            if(nextfreeblock != 0) {
-                int freelengthfieldsize = readMarkerLowerBits(nextfreeblock - 1);
-                writeAddressField(nextfreeblock + freelengthfieldsize + ADDRESS_SIZE, 0);
+            address = findFittingBlockInList(size, address);
+            if(address == segment.getListAnchor(blocklist)){
+                long nextfreeblock = getNextFreeBlock(address);
+                if(nextfreeblock != 0) {
+                    int freelengthfieldsize = readMarkerLowerBits(nextfreeblock - 1);
+                    writeAddressField(nextfreeblock + freelengthfieldsize + ADDRESS_SIZE, 0);
+                }
+                segment.changeListAnchor(blocklist, nextfreeblock);
+            } else {
+                removeBlockFromFreeBlockList(address);
             }
-            segment.changeListAnchor(blocklist, nextfreeblock);         //setzt den naechsten freien Block als Listenanker
+
             int blocksize = readLengthField(address, readMarkerLowerBits(address - 1));    //Groesse des angeforderten Blocks
             int newblocksize = blocksize - size;                       //Groesse des neuen freien Blocks
 
@@ -172,17 +178,24 @@ public class MemoryManager {
             segment.usedspace += size;
             int blocklist = segment.findFittingBlockList(size);         //Freispeicher-Liste in der passenden Groesse
             address = segment.getListAnchor(blocklist);
-            long nextfreeblock = getNextFreeBlock(address);
-            if(nextfreeblock != 0) {
-                int freelengthfieldsize = readMarkerLowerBits(nextfreeblock - 1);
-                writeAddressField(nextfreeblock + freelengthfieldsize + ADDRESS_SIZE, 0);
+            address = findFittingBlockInList(size, address);
+            if(address == segment.getListAnchor(blocklist)){
+                long nextfreeblock = getNextFreeBlock(address);
+                if(nextfreeblock != 0) {
+                    int freelengthfieldsize = readMarkerLowerBits(nextfreeblock - 1);
+                    writeAddressField(nextfreeblock + freelengthfieldsize + ADDRESS_SIZE, 0);
+                }
+                segment.changeListAnchor(blocklist, nextfreeblock);
+            } else {
+                removeBlockFromFreeBlockList(address);
             }
-            segment.changeListAnchor(blocklist, nextfreeblock);         //setzt den naechsten freien Block als Listenanker
             int blocklengthfield = readMarkerLowerBits(address - 1);
             int blocksize = readLengthField(address, blocklengthfield);    //Groesse des angeforderten Blocks
             int newblocksize = blocksize - size;                       //Groesse des neuen freien Blocks
 
             long newblockaddress = address + size + 1;                  //Adresse des neuen freien Blocks
+
+            System.out.println(newblocksize);
 
             writeMarkerLowerBits(address - 1, usedmarkervalue);
             writeLengthField(address, object.length, lengthfieldsize);
@@ -392,6 +405,18 @@ public class MemoryManager {
 
     //Bloecke
 
+    public long findFittingBlockInList(int size, long anchor){
+        long block = anchor;
+        while(block != 0){
+            int lengthfieldsize = readMarkerLowerBits(block - 1);
+            if(readLengthField(block, lengthfieldsize) >= size)
+                return block;
+            else
+                block = readAddressField(block + lengthfieldsize);
+        }
+        return -1;
+    }
+
     public long getNextBlock(long address){
         int marker = readMarkerLowerBits(address - 1);
         int blocksize;
@@ -505,13 +530,6 @@ public class MemoryManager {
         }
         return ByteBuffer.allocate(Integer.BYTES).put(convert).flip().getInt();
 
-        /*int value = 0;
-        for(int i = 0; i < lengthfieldsize; i++){
-            value = value | offHeapAccess.readByte(address + i + addressoffset);
-            value = value << 8;
-        }
-        return value;*/
-
 
     }
 
@@ -562,12 +580,15 @@ public class MemoryManager {
     private void removeBlockFromFreeBlockList(long address){
         SegmentHeader segment = getSegmentByAddress(address);
         long nextblock = getNextFreeBlock(address);
-        int nextblocklengthfield = readMarkerLowerBits(nextblock - 1);
         long prevblock = getPreviousBlock(address);
-        writeAddressField(nextblock + nextblocklengthfield + ADDRESS_SIZE, prevblock);
-        int prevblocklengthfield = readMarkerLowerBits(prevblock - 1);
-        writeAddressField(prevblock + prevblocklengthfield, nextblock);
-
+        if(nextblock != 0) {
+            int nextblocklengthfield = readMarkerLowerBits(nextblock - 1);
+            writeAddressField(nextblock + nextblocklengthfield + ADDRESS_SIZE, prevblock);
+        }
+        if(prevblock != 0) {
+            int prevblocklengthfield = readMarkerLowerBits(prevblock - 1);
+            writeAddressField(prevblock + prevblocklengthfield, nextblock);
+        }
     }
 
     private void changeListAnchor(SegmentHeader segment, int list, long newanchor){

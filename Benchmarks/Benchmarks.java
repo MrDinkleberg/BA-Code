@@ -278,7 +278,7 @@ public class Benchmarks {
     public static double benchmarkAllocations(long size, int segments, int initblocksize, int writes) throws IllegalAccessException, InterruptedException, NoSuchFieldException, ExecutionException {
 
         MemoryManager memoryManager = new MemoryManager(size, segments, initblocksize);
-        byte[] object = new byte[5000];
+        byte[] object = new byte[10000];
         long[] addresses = new long[writes];
 
         ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
