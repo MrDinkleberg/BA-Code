@@ -195,8 +195,6 @@ public class MemoryManager {
 
             long newblockaddress = address + size + 1;                  //Adresse des neuen freien Blocks
 
-            System.out.println(newblocksize);
-
             writeMarkerLowerBits(address - 1, usedmarkervalue);
             writeLengthField(address, object.length, lengthfieldsize);
             writeByteArray(address + lengthfieldsize, object, object.length);
@@ -412,7 +410,7 @@ public class MemoryManager {
             if(readLengthField(block, lengthfieldsize) >= size)
                 return block;
             else
-                block = readAddressField(block + lengthfieldsize);
+                block = getNextFreeBlock(block);
         }
         return -1;
     }
