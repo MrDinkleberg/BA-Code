@@ -133,6 +133,10 @@ public class MemoryManager {
             int blocklist = segment.findFittingBlockList(size);         //Freispeicher-Liste in der passenden Groesse
             address = segment.getListAnchor(blocklist);
             address = findFittingBlockInList(size, address);
+            while(address == 0){
+                blocklist++;
+                address = findFittingBlockInList(size, segment.getListAnchor(blocklist));
+            }
             if(address == segment.getListAnchor(blocklist)){
                 long nextfreeblock = getNextFreeBlock(address);
                 if(nextfreeblock != 0) {
