@@ -324,7 +324,7 @@ public class Benchmarks {
         es.shutdown();
         es.awaitTermination(1, TimeUnit.HOURS);
 
-        es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        es = Executors.newFixedThreadPool(12);
 
         long starttime = System.nanoTime();
 
@@ -359,7 +359,7 @@ public class Benchmarks {
         Random accessselector = new Random();
         int writecounter= writes;
         int readcounter = writes * readsperwrite;
-        ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        ExecutorService es = Executors.newFixedThreadPool(12);
 
         for(int i = 0; i < writes; i++){
             Callable<Long> task = () -> memoryManager.allocateSerialized(object);
@@ -369,7 +369,7 @@ public class Benchmarks {
         es.shutdown();
         es.awaitTermination(1, TimeUnit.HOURS);
 
-        es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        es = Executors.newFixedThreadPool(12);
 
 
         long starttime = System.nanoTime();
