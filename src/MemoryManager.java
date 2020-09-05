@@ -51,7 +51,7 @@ public class MemoryManager {
             es.submit(() -> initSegment(segment));
         }
         es.shutdown();
-        es.awaitTermination(1, TimeUnit.MINUTES);
+        es.awaitTermination(1, TimeUnit.HOURS);
     }
 
     private void initSegment(SegmentHeader segment){
@@ -153,7 +153,7 @@ public class MemoryManager {
             writeLengthField(address, objectbytearray.length, lengthfieldsize);
             writeByteArray(address + lengthfieldsize, objectbytearray, objectbytearray.length);
             writeLengthField(address + lengthfieldsize + objectbytearray.length, objectbytearray.length, lengthfieldsize);
-            createNewTrailerMarker(address + size, usedmarkervalue);
+            writeMarkerUpperBits(address + size, usedmarkervalue);
             if(newblocksize > 0) {
                 cutFreeBlock(segment, newblockaddress, newblocksize); //erstellt aus ueberschuessigem Speicher neuen freien Block
             }
@@ -179,6 +179,10 @@ public class MemoryManager {
             int blocklist = segment.findFittingBlockList(size);         //Freispeicher-Liste in der passenden Groesse
             address = segment.getListAnchor(blocklist);
             address = findFittingBlockInList(size, address);
+            while(address == 0){
+                blocklist++;
+                address = findFittingBlockInList(size, segment.getListAnchor(blocklist));
+            }
             if(address == segment.getListAnchor(blocklist)){
                 long nextfreeblock = getNextFreeBlock(address);
                 if(nextfreeblock != 0) {
@@ -412,7 +416,7 @@ public class MemoryManager {
             else
                 block = getNextFreeBlock(block);
         }
-        return -1;
+        return 0;
     }
 
     public long getNextBlock(long address){
@@ -592,7 +596,7 @@ public class MemoryManager {
         long oldanchor = segment.getListAnchor(list);
         if(oldanchor != 0){
             int oldlengthfieldsize = readMarkerLowerBits(oldanchor - 1);
-            writeAddressField(oldanchor + oldlengthfieldsize + ADDRESS_SIZE, newanchor);
+            writeAddressField(oldanchor + oldlengthfieldsize + ADDRESS_SIZE, newanchor); //Vorgaenger des alten Ankers ist neuer Anker
             int newlengthfieldsize = readMarkerLowerBits(newanchor - 1);
             writeAddressField(newanchor + newlengthfieldsize, oldanchor);
             segment.changeListAnchor(list, newanchor);
@@ -615,7 +619,7 @@ public class MemoryManager {
     public int readMarkerLowerBits(long address){
         byte marker = offHeapAccess.readByte(address + addressoffset);
         int value = marker & 0xFF;
-        return (byte) (value & 0xF);
+        return  (value & 0xF);
     }
 
     public void writeMarkerUpperBits(long address, byte value){

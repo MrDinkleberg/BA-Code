@@ -143,7 +143,7 @@ class MemoryManagerTest  {
 
         //Bereich wird mit 1en gefuellt
         for(int i = 0; i < 10; i++){
-            memoryManager.writeByte(i, (byte) 1);
+            memoryManager.writeByte(i, (byte) 0xFF);
         }
 
         memoryManager.writeLengthField(5, 65536, 3);
@@ -157,7 +157,7 @@ class MemoryManagerTest  {
         memoryManager = new MemoryManager(10000, 1);
 
         for(int i = 0; i < 10; i++){
-            memoryManager.writeByte(i, (byte) 1);
+            memoryManager.writeByte(i, (byte) 0xFF);
         }
 
         memoryManager.writeAddressField(3, 500);
@@ -172,7 +172,7 @@ class MemoryManagerTest  {
         memoryManager = new MemoryManager(10000, 1);
 
         for(int i = 0; i < 10; i++){
-            memoryManager.writeByte(i, (byte) 1);
+            memoryManager.writeByte(i, (byte) 0xFF);
         }
 
         memoryManager.writeMarkerUpperBits(5, (byte) 3);
@@ -187,7 +187,7 @@ class MemoryManagerTest  {
         memoryManager = new MemoryManager(10000, 1);
 
         for(int i = 0; i < 10; i++){
-            memoryManager.writeByte(i, (byte) 1);
+            memoryManager.writeByte(i, (byte) 0xFF);
         }
 
         memoryManager.writeMarkerLowerBits(5, (byte) 3);
@@ -202,7 +202,7 @@ class MemoryManagerTest  {
         memoryManager = new MemoryManager(10000, 1);
 
         for(int i = 0; i < 10; i++){
-            memoryManager.writeByte(i, (byte) 1);
+            memoryManager.writeByte(i, (byte) 0xFF);
         }
 
         byte[] array = new byte[5];
