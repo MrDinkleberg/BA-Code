@@ -171,7 +171,7 @@ public class MemoryManager {
 
     public long allocateSerialized(byte[] object) {
         byte usedmarkervalue = getUsedBlockMarkerValue(object.length);       //Markerwert des allozierten Speichers
-        int lengthfieldsize = usedmarkervalue - 8;  //berechnet Laengenfeld fuer belegten Block
+        int lengthfieldsize = usedmarkervalue - 8;  //berechnet Laengenfeldgroesse fuer belegten Block
         int size = object.length + 2 * lengthfieldsize;
         long address;
 
@@ -213,7 +213,6 @@ public class MemoryManager {
         } finally {
             segment.lock.unlockWrite(stamp);
         }
-        //System.out.println("done");
         return address;
 
 
@@ -585,11 +584,17 @@ public class MemoryManager {
     private void removeBlockFromFreeBlockList(long address){
         long nextblock = getNextFreeBlock(address);
         long prevblock = getPreviousFreeBlock(address);
-        if(nextblock != 0) {
+        if(nextblock != 0 && prevblock == 0) {
             int nextblocklengthfield = readMarkerLowerBits(nextblock - 1);
             writeAddressField(nextblock + nextblocklengthfield + ADDRESS_SIZE, prevblock);
         }
-        if(prevblock != 0) {
+        else if(nextblock == 0 && prevblock != 0) {
+            int prevblocklengthfield = readMarkerLowerBits(prevblock - 1);
+            writeAddressField(prevblock + prevblocklengthfield, nextblock);
+        }
+        else {
+            int nextblocklengthfield = readMarkerLowerBits(nextblock - 1);
+            writeAddressField(nextblock + nextblocklengthfield + ADDRESS_SIZE, prevblock);
             int prevblocklengthfield = readMarkerLowerBits(prevblock - 1);
             writeAddressField(prevblock + prevblocklengthfield, nextblock);
         }
