@@ -1,5 +1,7 @@
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class MemoryManagerTest  {
@@ -8,7 +10,7 @@ class MemoryManagerTest  {
 
     @Test
     void getNextBlock() throws IllegalAccessException, InterruptedException, NoSuchFieldException {
-        memoryManager = new MemoryManager(10000, 1);
+        memoryManager = new MemoryManager(10000, 1, 1);
 
         //Erstellung von 3 300 Byte grossen freien Bloecken an den Adressen 1, 302 und 603
         memoryManager.writeMarkerLowerBits(0, (byte) 2);
@@ -36,7 +38,7 @@ class MemoryManagerTest  {
 
     @Test
     void getPreviousBlock() throws IllegalAccessException, InterruptedException, NoSuchFieldException {
-        memoryManager = new MemoryManager(10000, 1);
+        memoryManager = new MemoryManager(10000, 1, 1);
 
         //Erstellung von 3 300 Byte grossen freien Bloecken an den Adressen 1, 302 und 603
         memoryManager.writeMarkerLowerBits(0, (byte) 2);
@@ -213,6 +215,42 @@ class MemoryManagerTest  {
 
         memoryManager.writeByteArray(3, array, array.length);
         assertArrayEquals(array, memoryManager.readByteArray(3, 5));
+
+        memoryManager.cleanup();
+
+    }
+
+    @Test
+    void allocate() throws IllegalAccessException, InterruptedException, NoSuchFieldException {
+        memoryManager = new MemoryManager(100000, 1, 1000);
+
+        byte[] object = new byte[64];
+        Arrays.fill(object, (byte) 1);
+
+
+        long address = memoryManager.allocateSerialized(object);
+
+        assertArrayEquals(object, memoryManager.readObject(address));
+
+        memoryManager.cleanup();
+
+    }
+
+    @Test
+    void writeObject() throws IllegalAccessException, InterruptedException, NoSuchFieldException {
+        memoryManager = new MemoryManager(100000, 1, 1000);
+
+        byte[] object = new byte[64];
+        Arrays.fill(object, (byte) 1);
+
+
+        long address = memoryManager.allocateSerialized(object);
+
+        byte[] newobject = new byte[64];
+        Arrays.fill(newobject, (byte) 2);
+        memoryManager.writeSerialized(address, newobject);
+
+        assertArrayEquals(newobject, memoryManager.readObject(address));
 
         memoryManager.cleanup();
 

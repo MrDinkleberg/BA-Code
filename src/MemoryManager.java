@@ -149,7 +149,7 @@ public class MemoryManager {
             }
 
             int blocksize = readLengthField(address, readMarkerLowerBits(address - 1));    //Groesse des angeforderten Blocks
-            int newblocksize = blocksize - size;                       //Groesse des neuen freien Blocks
+            int newblocksize = blocksize - size - 1;                       //Groesse des neuen freien Blocks
 
             long newblockaddress = address + size + 1;                  //Adresse des neuen freien Blocks
 
@@ -310,7 +310,7 @@ public class MemoryManager {
                 if (objectarray.length != blocksize) {
                     System.out.println("Object is of different size");
                 } else {
-                    writeAddressByteArray(address + lengthfieldsize, objectarray);
+                    writeByteArray(address + lengthfieldsize, objectarray, objectarray.length);
                 }
             } finally {
                 segment.lock.unlockWrite(stamp);
@@ -328,7 +328,7 @@ public class MemoryManager {
                 if (object.length != blocksize) {
                     System.out.println("Object is of different size");
                 } else {
-                    writeAddressByteArray(address + lengthfieldsize, object);
+                    writeByteArray(address + lengthfieldsize, object, object.length);
                 }
             } finally {
                 segment.lock.unlockWrite(stamp);
