@@ -8,6 +8,7 @@ class MemoryManagerTest  {
 
     MemoryManager memoryManager;
 
+
     @Test
     void getNextBlock() throws IllegalAccessException, InterruptedException, NoSuchFieldException {
         memoryManager = new MemoryManager(10000, 1, 1);
@@ -199,6 +200,22 @@ class MemoryManagerTest  {
 
     }
 
+    @Test
+    void markerValues() throws IllegalAccessException, InterruptedException, NoSuchFieldException {
+        memoryManager = new MemoryManager(10000, 1);
+
+        for(int i = 0; i < 10; i++){
+            memoryManager.writeByte(i, (byte) 0xFF);
+        }
+
+        memoryManager.writeMarkerLowerBits(5, (byte) 3);
+        memoryManager.writeMarkerUpperBits(5, (byte) 2);
+        assertEquals(3, memoryManager.readMarkerLowerBits(5));
+        assertEquals(2, memoryManager.readMarkerUpperBits(5));
+
+        memoryManager.cleanup();
+
+    }
 
     @Test
     void readByteArray() throws IllegalAccessException, InterruptedException, NoSuchFieldException {
@@ -214,7 +231,7 @@ class MemoryManagerTest  {
             array[i] = 5;
         }
 
-        memoryManager.writeByteArray(3, array, array.length);
+        memoryManager.writeByteArray(3, array);
         assertArrayEquals(array, memoryManager.readByteArray(3, 5));
 
         memoryManager.cleanup();
