@@ -63,7 +63,7 @@ public class SegmentHeader {
         return MAXBLOCKSIZE_EXPONENT;
     }
 
-    public void changeListAnchor(int index, long address){
+    public void setListAnchor(int index, long address){
         freeblocks[index] = address;
     }
 

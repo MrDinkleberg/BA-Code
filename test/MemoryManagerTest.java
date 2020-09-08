@@ -199,6 +199,7 @@ class MemoryManagerTest  {
 
     }
 
+
     @Test
     void readByteArray() throws IllegalAccessException, InterruptedException, NoSuchFieldException {
         memoryManager = new MemoryManager(10000, 1);
@@ -219,6 +220,7 @@ class MemoryManagerTest  {
         memoryManager.cleanup();
 
     }
+
 
     @Test
     void allocate() throws IllegalAccessException, InterruptedException, NoSuchFieldException {

@@ -1,6 +1,5 @@
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -143,7 +142,7 @@ public class MemoryManager {
                     int freelengthfieldsize = readMarkerLowerBits(nextfreeblock - 1);
                     writeAddressField(nextfreeblock + freelengthfieldsize + ADDRESS_SIZE, 0);
                 }
-                segment.changeListAnchor(blocklist, nextfreeblock);
+                segment.setListAnchor(blocklist, nextfreeblock);
             } else {
                 removeBlockFromFreeBlockList(address);
             }
@@ -193,13 +192,13 @@ public class MemoryManager {
                     int freelengthfieldsize = readMarkerLowerBits(nextfreeblock - 1);
                     writeAddressField(nextfreeblock + freelengthfieldsize + ADDRESS_SIZE, 0);
                 }
-                segment.changeListAnchor(blocklist, nextfreeblock);
+                segment.setListAnchor(blocklist, nextfreeblock);
             } else {
                 removeBlockFromFreeBlockList(address);
             }
             int blocklengthfield = readMarkerLowerBits(address - 1);
             int blocksize = readLengthField(address, blocklengthfield);    //Groesse des angeforderten Blocks
-            int newblocksize = blocksize - size;                       //Groesse des neuen freien Blocks
+            int newblocksize = blocksize - size - 1;                       //Groesse des neuen freien Blocks
 
             long newblockaddress = address + size + 1;                  //Adresse des neuen freien Blocks
 
@@ -392,8 +391,8 @@ public class MemoryManager {
             int blocklist = segment.findExactBlockList(newblocksize);
             writeMarkerLowerBits(newblockaddress - 1, markervalue);
             createFreeBlock(newblockaddress, newblocksize, 0, 0);
-            changeListAnchor(segment, blocklist, newblockaddress);
             writeMarkerUpperBits(newblockaddress + newblocksize, markervalue);
+            changeListAnchor(segment, blocklist, newblockaddress);
         }
 
     }
@@ -598,15 +597,13 @@ public class MemoryManager {
 
     private void changeListAnchor(SegmentHeader segment, int list, long newanchor){
         long oldanchor = segment.getListAnchor(list);
-        if(oldanchor != 0){
+        if(oldanchor != 0) {
             int oldlengthfieldsize = readMarkerLowerBits(oldanchor - 1);
             writeAddressField(oldanchor + oldlengthfieldsize + ADDRESS_SIZE, newanchor); //Vorgaenger des alten Ankers ist neuer Anker
             int newlengthfieldsize = readMarkerLowerBits(newanchor - 1);
             writeAddressField(newanchor + newlengthfieldsize, oldanchor);
-            segment.changeListAnchor(list, newanchor);
-        } else {
-            segment.changeListAnchor(list, newanchor);
         }
+        segment.setListAnchor(list, newanchor);
     }
 
 
